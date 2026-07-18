@@ -100,90 +100,25 @@ TALL = [
 ]
 
 
+# Shared pixel helpers live in pixellib so the cast generator uses the same
+# encoder (scripts/pixellib.py).
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pixellib import (blank, blit, grid_to_pixels as _grid_to_pixels, hstack,
+                      recolor_template, shear, validate as _validate,
+                      write_png as _write_png)
+
+
 def validate(grid):
-    assert len(grid) == 16, f"grid has {len(grid)} rows"
-    for row in grid:
-        assert len(row) == 16, f"row '{row}' has {len(row)} chars"
-        for ch in row:
-            assert ch in PALETTE, f"unknown palette char '{ch}'"
-    return grid
-
-
-def shear(grid, direction):
-    """Lean the blob by shifting upper rows sideways (dance sway)."""
-    out = []
-    for y, row in enumerate(grid):
-        shift = 2 if y <= 7 else (1 if y <= 11 else 0)
-        if direction == "right":
-            out.append(("." * shift + row)[:16])
-        else:
-            out.append((row + "." * shift)[shift:])
-    return out
+    return _validate(grid, PALETTE)
 
 
 def grid_to_pixels(grid, scale=1):
-    """-> list of rows of RGBA tuples, nearest-neighbor scaled."""
-    px = []
-    for row in grid:
-        expanded = [PALETTE[ch] for ch in row for _ in range(scale)]
-        px.extend([expanded] * scale)
-    return px
-
-
-def blank(width, height):
-    return [[(0, 0, 0, 0)] * width for _ in range(height)]
-
-
-def blit(canvas, pixels, ox, oy):
-    for y, row in enumerate(pixels):
-        cy = oy + y
-        if 0 <= cy < len(canvas):
-            for x, p in enumerate(row):
-                cx = ox + x
-                if 0 <= cx < len(canvas[0]) and p[3] != 0:
-                    canvas[cy][cx] = p
-    return canvas
-
-
-def hstack(frames):
-    height = len(frames[0])
-    out = []
-    for y in range(height):
-        row = []
-        for f in frames:
-            row.extend(f[y])
-        out.append(row)
-    return out
-
-
-def recolor_template(pixels):
-    """Menu bar resting icon: black + alpha only, so isTemplate rendering
-    adapts to dark mode / menu bar tint."""
-    out = []
-    for row in pixels:
-        out.append([(0, 0, 0, p[3]) if p[3] != 0 else p for p in row])
-    return out
+    return _grid_to_pixels(grid, PALETTE, scale)
 
 
 def write_png(path, pixels):
-    height = len(pixels)
-    width = len(pixels[0])
-    raw = b""
-    for row in pixels:
-        raw += b"\x00" + b"".join(struct.pack("4B", *p) for p in row)
-
-    def chunk(tag, data):
-        c = tag + data
-        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
-
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    png = (b"\x89PNG\r\n\x1a\n"
-           + chunk(b"IHDR", ihdr)
-           + chunk(b"IDAT", zlib.compress(raw, 9))
-           + chunk(b"IEND", b""))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(png)
-    print(f"  wrote {path.relative_to(REPO)}  ({width}x{height})")
+    _write_png(path, pixels, repo_root=REPO)
 
 
 # ------------------------------------------------------------------- sounds ---
