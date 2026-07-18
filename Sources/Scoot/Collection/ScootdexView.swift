@@ -68,6 +68,7 @@ struct ScootdexView: View {
     private func cell(for species: Buddy) -> some View {
         let ownedIndex = manager.state.ownedIndex(of: species.id)
         let isActive = manager.activeSpecies?.id == species.id
+        let isSelected = selected?.id == species.id
         VStack(spacing: 4) {
             ZStack {
                 if let index = ownedIndex, let owned = manager.state.owned[safe: index],
@@ -120,7 +121,10 @@ struct ScootdexView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 4)
         .frame(maxWidth: .infinity)
-        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 9))
+        // Selection = tinted fill (instant click feedback); on duty = accent
+        // border. Distinct, so browsing never hides who's performing.
+        .background(isSelected ? Color.accentColor.opacity(0.12) : Color.primary.opacity(0.05),
+                    in: RoundedRectangle(cornerRadius: 9))
         .overlay(
             RoundedRectangle(cornerRadius: 9)
                 .strokeBorder(isActive ? Color.accentColor : .clear, lineWidth: 1)
@@ -156,11 +160,17 @@ struct ScootdexView: View {
                     PortraitFlourishView(sheet: sheet,
                                          celebrateSheet: SpriteLibrary.celebrateSheet(for: species),
                                          bondScoots: owned?.bondScoots ?? 0)
+                        .id(species.id)
                 }
             }
             .frame(width: 130, height: 96)
 
+            // .id ties the field's local state to THIS buddy. Without it,
+            // SwiftUI keeps the previous buddy's draft across a selection
+            // change (same structural position), and a focus-loss commit
+            // could write buddy A's name onto buddy B.
             NameField(name: owned?.givenName ?? "", onCommit: { manager.rename(at: index, to: $0) })
+                .id(species.id)
 
             HStack(spacing: 5) {
                 Text(species.displayName)
