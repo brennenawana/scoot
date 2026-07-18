@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "species": [
+    {
+      "id": "round-blob",
+      "displayName": "Round Blob",
+      "rarity": "common",
+      "category": "cute",
+      "spriteSheet": "buddy-round-blob",
+      "flavor": "The classic, evolved. Squishy silhouette, big eyes, zero worries.",
+      "suggestedNames": ["Mochi", "Pudding", "Bloop"]
+    },
+    {
+      "id": "bean-cat",
+      "displayName": "Bean Cat",
+      "rarity": "common",
+      "category": "cute",
+      "spriteSheet": "buddy-bean-cat",
+      "flavor": "Loaf-shaped. The ears carry the whole silhouette.",
+      "suggestedNames": ["Bean", "Toast", "Miso"]
+    },
+    {
+      "id": "dumpling-dog",
+      "displayName": "Dumpling Dog",
+      "rarity": "common",
+      "category": "cute",
+      "spriteSheet": "buddy-dumpling-dog",
+      "flavor": "Pleated top knot, stubby legs, full-body wiggle.",
+      "suggestedNames": ["Gyoza", "Button", "Biscuit"]
+    },
+    {
+      "id": "traffic-cone",
+      "displayName": "Traffic Cone",
+      "rarity": "common",
+      "category": "weird",
+      "spriteSheet": "buddy-traffic-cone",
+      "flavor": "Sentient, apologetic, surprisingly good at standing.",
+      "suggestedNames": ["Coney", "Wilbur", "Hazard"]
+    },
+    {
+      "id": "baby-ghost",
+      "displayName": "Baby Ghost",
+      "rarity": "uncommon",
+      "category": "cute",
+      "spriteSheet": "buddy-baby-ghost",
+      "flavor": "Trailing hem, permanently surprised. Floats a pixel off the ground.",
+      "suggestedNames": ["Boo", "Wisp", "Sheets"]
+    },
+    {
+      "id": "sunglasses-frog",
+      "displayName": "Sunglasses Frog",
+      "rarity": "uncommon",
+      "category": "cool",
+      "spriteSheet": "buddy-sunglasses-frog",
+      "flavor": "Never blinks — the glasses do. Head-bobs slightly off-beat.",
+      "suggestedNames": ["Rib", "Marlon", "Decks"]
+    },
+    {
+      "id": "houseplant",
+      "displayName": "Houseplant",
+      "rarity": "uncommon",
+      "category": "weird",
+      "spriteSheet": "buddy-houseplant",
+      "flavor": "A walking monstera. Photosynthesizes while you rest.",
+      "suggestedNames": ["Fern", "Monty", "Sprout"]
+    },
+    {
+      "id": "skater-robot",
+      "displayName": "Skater Robot",
+      "rarity": "rare",
+      "category": "cool",
+      "spriteSheet": "buddy-skater-robot",
+      "flavor": "One wheel, antenna bobble, immaculate balance.",
+      "suggestedNames": ["Volt", "Kicky", "Servo"]
+    },
+    {
+      "id": "hoodie-fox",
+      "displayName": "Hoodie Fox",
+      "rarity": "rare",
+      "category": "cool",
+      "spriteSheet": "buddy-hoodie-fox",
+      "flavor": "Hood up, tail out the back. The mysterious one.",
+      "suggestedNames": ["Ash", "Rune", "Scout"]
+    },
+    {
+      "id": "tiny-dragon",
+      "displayName": "Tiny Dragon",
+      "rarity": "epic",
+      "category": "badass",
+      "spriteSheet": "buddy-tiny-dragon",
+      "flavor": "Big wings on a small body. Occasionally puffs smoke.",
+      "suggestedNames": ["Ember", "Pip", "Fafnir"]
+    },
+    {
+      "id": "knight-beetle",
+      "displayName": "Knight Beetle",
+      "rarity": "epic",
+      "category": "badass",
+      "spriteSheet": "buddy-knight-beetle",
+      "flavor": "Horn for a visor, armor that clanks when it stomps.",
+      "suggestedNames": ["Sir Clank", "Lance", "Hex"]
+    },
+    {
+      "id": "thundercloud",
+      "displayName": "Thundercloud",
+      "rarity": "secret",
+      "category": "badass",
+      "spriteSheet": "buddy-thundercloud",
+      "flavor": "A scowling cumulonimbus. Exists mostly in whispers.",
+      "suggestedNames": ["Rumble", "Nimbus", "Static"]
+    }
+  ]
+}
