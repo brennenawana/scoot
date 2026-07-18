@@ -1,0 +1,109 @@
+<!-- @dsCard group="Collection" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Scootdex</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; --well:#ececef; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; --well:#232325; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:680px; }
+  /* ------- the window mock: native chrome outside, pixel world inside ------- */
+  .window { width:680px; background:var(--panel); border:1px solid var(--hairline); border-radius:12px;
+            box-shadow:0 18px 50px rgba(0,0,0,.18); overflow:hidden; }
+  .titlebar { height:36px; display:flex; align-items:center; padding:0 12px; gap:6px;
+              border-bottom:1px solid var(--hairline); }
+  .dot { width:11px; height:11px; border-radius:50%; background:var(--hairline); }
+  .titlebar span { flex:1; text-align:center; font-size:12.5px; font-weight:600; margin-right:40px; }
+  .content { display:flex; }
+  .left { flex:1.35; padding:14px; border-right:1px solid var(--hairline); }
+  .meta { display:flex; align-items:baseline; gap:10px; margin:0 2px 10px; }
+  .meta b { font-size:13px; }
+  .meta small { color:var(--muted); font-size:11px; }
+  .meta .sparks { margin-left:auto; color:var(--muted); font-size:11px; }
+  .dex { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .cell { background:var(--well); border-radius:9px; padding:8px 4px 6px; text-align:center;
+          border:1px solid transparent; }
+  .cell.active { border-color:var(--accent); }
+  .cell .art { height:36px; display:flex; align-items:center; justify-content:center; }
+  .px { width:32px; height:32px; image-rendering:pixelated; background-repeat:no-repeat; }
+  .sil { opacity:.28; }
+  @media (prefers-color-scheme: dark) { .sil { filter:invert(.9); opacity:.35; } }
+  .cell b { display:block; font-family:ui-monospace,monospace; font-size:9.5px; letter-spacing:.5px;
+            margin-top:4px; }
+  .cell small { display:block; font-size:9px; color:var(--muted); }
+  .rdot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:3px; }
+  .unknown { color:var(--muted); font-family:ui-monospace,monospace; }
+  .whisper .art { font-size:16px; color:var(--muted); opacity:.5; }
+  /* ------- detail panel: naming + bond ------- */
+  .right { flex:1; padding:14px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .stage { width:128px; height:96px; display:flex; align-items:center; justify-content:center;
+           background:radial-gradient(circle,#3fa35c22,transparent 70%); border-radius:12px; }
+  .stage .px { transform:scale(2.5); }
+  .plate { font-family:ui-monospace,monospace; font-size:13px; letter-spacing:1px; margin-top:8px; }
+  .species { color:var(--muted); font-size:11px; }
+  .badge { font-size:9px; font-weight:700; padding:1px 8px; border-radius:99px; color:#fff;
+           background:#3fa35c; margin-left:5px; vertical-align:1px; }
+  .bond { margin:12px 0 2px; font-size:11.5px; color:var(--muted); }
+  .bondbar { width:150px; height:5px; background:var(--well); border-radius:99px; margin:5px auto 0; }
+  .bondbar i { display:block; width:62%; height:5px; background:var(--accent); border-radius:99px; }
+  .btns { display:flex; gap:8px; margin-top:14px; }
+  .btn { font-size:11.5px; padding:4px 12px; border-radius:6px; background:var(--well);
+         border:1px solid var(--hairline); }
+  .btn.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .footer { border-top:1px solid var(--hairline); padding:8px 14px; font-size:10.5px; color:var(--muted);
+            display:flex; justify-content:space-between; }
+  .notes { color:var(--muted); font-size:11.5px; margin-top:16px; max-width:680px; }
+  .notes b { color:var(--text); }
+</style>
+</head>
+<body>
+  <h1>Scootdex — the collection has daily presence</h1>
+  <p class="sub">Native macOS window (Layer 1) holding the pixel shelf (Layer 2). Your active
+  buddy is the menu bar icon and the nudge performer, so choosing here changes your everyday
+  UI. Unpulled species are silhouettes + “???” — anticipation surfaces. The Secret slot shows
+  no silhouette at all: it exists only in whispers until pulled.</p>
+
+  <div class="window">
+    <div class="titlebar"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Scootdex</span></div>
+    <div class="content">
+      <div class="left">
+        <div class="meta"><b>3 of 12 found</b><small>25%</small><span class="sparks">✦ 40 sparks</span></div>
+        <div class="dex">
+          <div class="cell active"><div class="art"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR42mNgGAWjAA1Ya2n8R8b01j94HPB/+wIwJtYgcvUNHgfANLw/vxQrxmUgufqGngPQDSRV/fBxAKl48DuAVhYT7ZBB5wBtaQkwJtciXPqHjgNw4WkhZmA8YGmAbg74P68NjMm1CJd+nNX0oHMArbIfzigZ9g6A4WurK8CY7lFAtANgCuhm8aBxAC6HUAuT3B4YMAfg6lhQiinuGdHaAQC95WK2SGAoQAAAAABJRU5ErkJggg==)"></div></div><b>TOAST</b><small><i class="rdot" style="background:#b59f8c"></i>Bean Cat</small></div>
+          <div class="cell"><div class="art"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlUlEQVR42mNgGAWjYBQQANZaGv8pwUPXATAD/ncVUITJdsiAOQDD4iMbUDGtHTJgDsAZ5BRaTLRDBq8DqIyHkAOgQFtaAoyJtoSAvqHjAJgBpDqAkL6h44D/89ogmNwEh0P/EHIADlylJ4+C6V4O0MwBtC6QyK8NB8oBD7KDwJhSi2HmDB0H4HIIuZjiNuGAOWDE9AsAI401axaOfXQAAAAASUVORK5CYII=)"></div></div><b>MOCHI</b><small><i class="rdot" style="background:#b59f8c"></i>Round Blob</small></div>
+          <div class="cell"><div class="art"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAwklEQVR42mNgGAUEgLWWxn9kTKm6oeMAmEHVR+pRMLoFxKobOg5AN9BnXhwKRreAWHVD3wH6VS5gjG4BIfmh5wBSo4JqQT/gDsBVkOByCC4+Lv0EHTRgDiBUkJCa3UgumAadAwhZgC5PcYE04A7AlVhwBSEhB+CKEpKzId0dQMhB5GKqtYQGzAEn870owhRHwaBxgLa0BBgTshBd3fBxwP95bWBMyAHo6oa+A5YG6YMxqYkPpm/oOoBaBRLV+4bUdgAAQsD28bQT4OAAAAAASUVORK5CYII=)"></div></div><b>FERN</b><small><i class="rdot" style="background:#3fa35c"></i>Houseplant</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUklEQVR42u3WOxIAIAhDQc5B4f1vGXsbcRzkY4rXb8MQUR0SmRBQGYClfwDY1BeAw/oAcFk9AJzLC8Dj8gAQGQEpALwCAvgLCCDAa4qZplk4YAJWp6XOx2RLqAAAAABJRU5ErkJggg==)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#b59f8c"></i>Common</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATElEQVR42u3TqxEAIAwE0dQRQf9dLh7DMPwSOLH+mTX3YjezzACa/gHQSYB3AQwmwDsAJhMgL4DFCZAHwOYEiAvgcHEA3EyAEIC/L6hjSX32llG+ywAAAABJRU5ErkJggg==)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#b59f8c"></i>Common</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASUlEQVR42u3XoREAIAwEwdQRQf9dPhUgmIQhgRNnXq19cx92MwPQCaDN3gEoWF+AkusD0OEAAAAAAAAAAPUBK0j2Xh/AM/oDMAF8DkYus1o6ngAAAABJRU5ErkJggg==)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#3fa35c"></i>Uncommon</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAW0lEQVR42u3Xuw0AIAgEUOagcP8tcQFNkL/JFdcerwOIeVFnCAAAJgLkktdyVc8ogChjHXzs+RIQlTkAaQoAAAAAAABzANXLyH2QAJAGyIa4z/IyQDTE/BmVADbYUd2WQdZ5zAAAAABJRU5ErkJggg==)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#3fa35c"></i>Uncommon</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAUUlEQVR42u3XwQ0AIAhD0c7Bwf23rBcnEIhWe/j3FwMkImJgM66QCQYoAJhMF8DiDDDAAD2AL+G/M8DmDLgf4C3wJcyC2v8FxwClTy8JeHMGJrlyNj4GQnRJAAAAAElFTkSuQmCC)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#3b82d9"></i>Rare</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAR0lEQVR42u3XsRUAIAgDUeagcP8t4xAKhucV1/8yicwVLwsAEwA6bC5Al5sDUHG+ADUHAAAAAAAAAPADdEP+BfiP0pZDYgPYtaMBgQ6C0XAAAAAASUVORK5CYII=)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#3b82d9"></i>Rare</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaElEQVR42u3WMQ4AIAgDQN7B4P9/iYujRExAatKhk4K3EBTVIZ0RAn4A2Mpt81AdNMCcRB8O1UEAvIuWnG1fSMDTEEAABKBq7EJjSQAU4BXkuA3bAdXLiIB/AFmQtF8xAW0AD3J7jgmYOeyd1s2Y2d4AAAAASUVORK5CYII=)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#8b5cf6"></i>Epic</small></div>
+          <div class="cell"><div class="art"><div class="px sil" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR42u3XMQ4AIAhDUc7B4P1vWXcWDQIB0+Gv5E2miuoSZzC57shEAA4R8D8gFDICgMfmAhDcHACS6wtAcQQQQEA/AF9CAgi4hZy+ZumLqAxgD3pne9gqTgFs1gaN5s3D6B0AAAAASUVORK5CYII=)"></div></div><b class="unknown">???</b><small><i class="rdot" style="background:#8b5cf6"></i>Epic</small></div>
+          <div class="cell whisper"><div class="art">?</div><b class="unknown">·&nbsp;·&nbsp;·</b><small>&nbsp;</small></div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="stage"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR42mNgGAWjAA1Ya2n8R8b01j94HPB/+wIwJtYgcvUNHgfANLw/vxQrxmUgufqGngPQDSRV/fBxAKl48DuAVhYT7ZBB5wBtaQkwJtciXPqHjgNw4WkhZmA8YGmAbg74P68NjMm1CJd+nNX0oHMArbIfzigZ9g6A4WurK8CY7lFAtANgCuhm8aBxAC6HUAuT3B4YMAfg6lhQiinuGdHaAQC95WK2SGAoQAAAAABJRU5ErkJggg==)"></div></div>
+        <div class="plate">TOAST</div>
+        <div class="species">Bean Cat<span class="badge" style="background:#b59f8c">COMMON</span></div>
+        <div class="bond">Bond · 31 scoots together<div class="bondbar"><i></i></div></div>
+        <div class="btns"><div class="btn">Rename…</div><div class="btn primary">On duty ✓</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>Roll odds: Common 60 · Uncommon 25 · Rare 10 · Epic 4 · Secret 1 — per 100</span><span>Duplicates become sparks</span></div>
+  </div>
+
+  <p class="notes"><b>Rules:</b> completion counts all 12 honestly (“3 of 12”), but the Secret
+  contributes no silhouette, name, or rarity label until pulled. Bond unlocks behavior, never
+  features — the bar has no numbers to grind, it's sentiment made visible. Renaming is always
+  free and instant. No guilt surface exists here: nothing is ever “missed” or “expiring.”</p>
+</body>
+</html>

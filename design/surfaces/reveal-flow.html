@@ -1,0 +1,85 @@
+<!-- @dsCard group="Reveal" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Reveal Flow (implemented states)</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; --well:#ececef; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; --well:#232325; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:700px; }
+  .board { display:grid; grid-template-columns:repeat(3, 225px); gap:12px; }
+  .frame { background:var(--panel); border:1px solid var(--hairline); border-radius:12px; overflow:hidden; }
+  .scene { height:170px; position:relative; display:flex; flex-direction:column; align-items:center;
+           justify-content:center; gap:8px; background:#141416; }
+  .cap { padding:9px 11px; }
+  .cap b { font-size:11.5px; display:block; }
+  .cap small { color:var(--muted); font-size:10.5px; line-height:1.35; display:block; }
+  .px { width:32px; height:32px; image-rendering:pixelated; background-repeat:no-repeat; }
+  .capsule { width:34px; height:44px; border-radius:17px; background:linear-gradient(#3c3c42,#26262b);
+             border:2px solid #55555e; }
+  .wiggle { animation:wig 1.2s ease-in-out infinite; }
+  @keyframes wig { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-9deg)} 75%{transform:rotate(9deg)} }
+  .aura { position:absolute; inset:0; }
+  .plate { font-family:ui-monospace,monospace; font-size:11px; color:#fff; letter-spacing:1px; }
+  .badge { font-size:9px; font-weight:700; padding:1px 8px; border-radius:99px; color:#fff; margin-left:6px; }
+  .namefield { width:160px; background:#232327; border:1px solid #3a3a40; border-radius:7px;
+               color:#e8e8ec; font-size:11.5px; padding:5px 9px; text-align:left; }
+  .namefield .hint { opacity:.45; }
+  .cta { font-size:11px; font-weight:600; color:#fff; background:var(--accent);
+         padding:4px 14px; border-radius:6px; }
+  .ghostbtn { font-size:10.5px; color:#aeb0b6; }
+  .chip { font-family:ui-monospace,monospace; font-size:11px; color:#ffd166; letter-spacing:.5px; }
+  .toastcard { background:#232327; border:1px solid #3a3a40; border-radius:9px; color:#e8e8ec;
+               font-size:11px; padding:7px 12px; }
+  .notes { color:var(--muted); font-size:11.5px; margin-top:16px; max-width:700px; }
+  .notes b { color:var(--text); }
+</style>
+</head>
+<body>
+  <h1>Reveal flow — from “roll ready” to a named buddy</h1>
+  <p class="sub">The storyboard's six beats (see Reveal — storyboard card) as implemented window
+  states. One activating window, dimmed stage, all pixel art at integer scale. The naming step
+  is the exit bar for v0.2: a friend names their buddy in their first session.</p>
+
+  <div class="board">
+    <div class="frame"><div class="scene">
+        <div class="toastcard">Your roll is ready — whenever you are.</div>
+        <div class="cta">Roll</div></div>
+      <div class="cap"><b>0 · Entry (popover)</b><small>No countdown, no pressure — the ticket keeps forever. The Roll button is the only accented control.</small></div></div>
+    <div class="frame"><div class="scene"><div class="capsule wiggle"></div>
+        <div class="ghostbtn">Skip ›</div></div>
+      <div class="cap"><b>1 · Capsule</b><small>Dim stage. Wiggle duration scales with rarity (0.8s Common → 2.5s Secret) — the connoisseur's tell. Skip appears after the first-ever reveal.</small></div></div>
+    <div class="frame"><div class="scene">
+        <div class="aura" style="background:radial-gradient(circle,#3b82d955,transparent 65%)"></div>
+        <div class="px" style="transform:scale(3);background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAmElEQVR42mNgGAWjgACw1tL4Twkeug6AGdA3eRlFmGyHDJgDqGUx2Q4ZMAfgspjSREi0QwadA2D8Tz3WFGFc5g49B2hLS4AxIQvR1Q0fB6Dj/y9OoWC6pwG6OQDdIegW43IIruw4dBxAaYFEcpE86B1AaSVEsKEy7ByAKxsPXgfQqimGnn2HjgPyilspwmQ30wfcASOuRwQAWTE7CwwZTDcAAAAASUVORK5CYII=)"></div>
+        <div><span class="plate">HOODIE FOX</span><span class="badge" style="background:#3b82d9">RARE</span></div></div>
+      <div class="cap"><b>2 · Meet</b><small>Burst → buddy lands with species plate + rarity aura/badge. Confetti scales with rarity; Epic+ softly spotlights Share.</small></div></div>
+    <div class="frame"><div class="scene">
+        <div class="px" style="transform:scale(2);background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAmElEQVR42mNgGAWjgACw1tL4Twkeug6AGdA3eRlFmGyHDJgDqGUx2Q4ZMAfgspjSREi0QwadA2D8Tz3WFGFc5g49B2hLS4AxIQvR1Q0fB6Dj/y9OoWC6pwG6OQDdIegW43IIruw4dBxAaYFEcpE86B1AaSVEsKEy7ByAKxsPXgfQqimGnn2HjgPyilspwmQ30wfcASOuRwQAWTE7CwwZTDcAAAAASUVORK5CYII=)"></div>
+        <div class="namefield">Rune<span class="hint">|</span></div>
+        <div class="cta">Meet Rune</div></div>
+      <div class="cap"><b>3 · Name</b><small>Prefilled from the species' suggestion list, fully editable, one tap to accept. Renameable forever from the Scootdex.</small></div></div>
+    <div class="frame"><div class="scene">
+        <div class="px" style="transform:scale(2);background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR42mNgGAWjAA1Ya2n8R8b01j94HPB/+wIwJtYgcvUNHgfANLw/vxQrxmUgufqGngPQDSRV/fBxAKl48DuAVhYT7ZBB5wBtaQkwJtciXPqHjgNw4WkhZmA8YGmAbg74P68NjMm1CJd+nNX0oHMArbIfzigZ9g6A4WurK8CY7lFAtANgCuhm8aBxAC6HUAuT3B4YMAfg6lhQiinuGdHaAQC95WK2SGAoQAAAAABJRU5ErkJggg==)"></div>
+        <div class="chip">Duplicate · +10 ✦ sparks</div></div>
+      <div class="cap"><b>3b · Duplicate</b><small>The other beat-2 outcome: a familiar face becomes sparks (10/20/40/80/160 by rarity), never a dead pull. Smaller moment, still warm.</small></div></div>
+    <div class="frame"><div class="scene">
+        <div class="px" style="transform:scale(2);background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAmElEQVR42mNgGAWjgACw1tL4Twkeug6AGdA3eRlFmGyHDJgDqGUx2Q4ZMAfgspjSREi0QwadA2D8Tz3WFGFc5g49B2hLS4AxIQvR1Q0fB6Dj/y9OoWC6pwG6OQDdIegW43IIruw4dBxAaYFEcpE86B1AaSVEsKEy7ByAKxsPXgfQqimGnn2HjgPyilspwmQ30wfcASOuRwQAWTE7CwwZTDcAAAAASUVORK5CYII=)"></div>
+        <div class="toastcard">Rune joins the shelf — 4 of 12 found.</div></div>
+      <div class="cap"><b>4 · Done</b><small>Lands in the Scootdex; first-ever buddy goes straight on duty (menu bar + nudges). Replayable from its dex card forever.</small></div></div>
+  </div>
+
+  <p class="notes"><b>Rules:</b> the reveal window is the only surface that ever activates the
+  app. Esc or click-outside quietly completes the reveal (never cancels the pull — the buddy is
+  already yours, unnamed buddies keep their suggestion). Odds are one click away from every
+  frame. Secret reveals skip the species plate until the burst settles — even the reveal
+  whispers.</p>
+</body>
+</html>

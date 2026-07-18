@@ -1,0 +1,90 @@
+<!-- @dsCard group="Earn Loop" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Roll Meter & Earned-Roll Surfaces</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; --well:#ececef; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; --well:#232325; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:680px; }
+  .row { display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+  .pop { width:260px; background:var(--panel); border:1px solid var(--hairline); border-radius:12px;
+         box-shadow:0 14px 40px rgba(0,0,0,.16); padding:14px; text-align:center; }
+  .pop h3 { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:10px; }
+  .px { width:32px; height:32px; image-rendering:pixelated; background-repeat:no-repeat;
+        margin:0 auto; transform:scale(2); transform-origin:center; }
+  .stage { height:76px; display:flex; align-items:center; justify-content:center; }
+  .status { font-size:13px; margin:2px 0 8px; }
+  .today { font-size:11px; color:var(--muted); }
+  .meter { display:flex; gap:5px; justify-content:center; margin:8px 0 2px; }
+  .pip { width:10px; height:10px; border-radius:50%; background:var(--well); border:1px solid var(--hairline); }
+  .pip.fill { background:var(--accent); border-color:transparent; }
+  .metercap { font-size:10.5px; color:var(--muted); margin-bottom:8px; }
+  .btns { display:flex; gap:8px; justify-content:center; margin-top:8px; }
+  .btn { font-size:11.5px; padding:4px 12px; border-radius:6px; background:var(--well);
+         border:1px solid var(--hairline); }
+  .btn.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .ticket { background:linear-gradient(135deg,#e8674b18,#ffd16618); border:1px dashed var(--accent);
+            border-radius:9px; padding:8px 10px; font-size:11.5px; margin-top:8px; }
+  .divider { border-top:1px solid var(--hairline); margin:10px -14px; }
+  .foot { display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); }
+  .toast { background:var(--panel); border:1px solid var(--hairline); border-radius:9px; padding:7px 12px;
+           font-size:11.5px; box-shadow:0 8px 24px rgba(0,0,0,.12); width:fit-content; }
+  .notes { color:var(--muted); font-size:11.5px; margin-top:16px; max-width:680px; }
+  .notes b { color:var(--text); }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:22px 0 10px; }
+</style>
+</head>
+<body>
+  <h1>Earned-roll surfaces — the meter, the ticket, the credit</h1>
+  <p class="sub">Every credited scoot advances the meter; 5 scoots mint a roll ticket.
+  Rolls are earned by movement only — never sold, never gifted. These are the popover's
+  two states plus the auto-credit toast.</p>
+
+  <div class="row">
+    <div class="pop">
+      <h3>POPOVER — METER FILLING</h3>
+      <div class="stage"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR42mNgGAWjAA1Ya2n8R8b01j94HPB/+wIwJtYgcvUNHgfANLw/vxQrxmUgufqGngPQDSRV/fBxAKl48DuAVhYT7ZBB5wBtaQkwJtciXPqHjgNw4WkhZmA8YGmAbg74P68NjMm1CJd+nNX0oHMArbIfzigZ9g6A4WurK8CY7lFAtANgCuhm8aBxAC6HUAuT3B4YMAfg6lhQiinuGdHaAQC95WK2SGAoQAAAAABJRU5ErkJggg==)"></div></div>
+      <div class="status">Next nudge in 27:14</div>
+      <div class="meter"><i class="pip fill"></i><i class="pip fill"></i><i class="pip fill"></i><i class="pip"></i><i class="pip"></i></div>
+      <div class="metercap">3 of 5 scoots to your next roll · 4 today</div>
+      <div class="btns"><div class="btn">Nudge Now</div><div class="btn">Pause 1 Hour</div></div>
+      <div class="divider"></div>
+      <div class="foot"><span>Scootdex</span><span>Settings</span><span>Quit</span></div>
+    </div>
+
+    <div class="pop">
+      <h3>POPOVER — ROLL READY</h3>
+      <div class="stage"><div class="px" style="background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR42mNgGAWjAA1Ya2n8R8b01j94HPB/+wIwJtYgcvUNHgfANLw/vxQrxmUgufqGngPQDSRV/fBxAKl48DuAVhYT7ZBB5wBtaQkwJtciXPqHjgNw4WkhZmA8YGmAbg74P68NjMm1CJd+nNX0oHMArbIfzigZ9g6A4WurK8CY7lFAtANgCuhm8aBxAC6HUAuT3B4YMAfg6lhQiinuGdHaAQC95WK2SGAoQAAAAABJRU5ErkJggg==)"></div></div>
+      <div class="status">Next nudge in 12:02</div>
+      <div class="ticket">🎟 Your roll is ready — whenever you are.<div class="btns"><div class="btn primary">Roll</div></div></div>
+      <div class="divider"></div>
+      <div class="foot"><span>Scootdex</span><span>Settings</span><span>Quit</span></div>
+    </div>
+
+    <div>
+      <h2 style="margin-top:0">Auto-credit toast</h2>
+      <div class="toast">Saw you step away. <b>+1 scoot.</b></div>
+      <h2>Tone rules</h2>
+      <div class="notes" style="margin-top:0">
+        Meter copy counts <i>up</i> (“3 of 5”), never down. A skipped nudge simply
+        doesn't advance it — no decay, no streaks, no “don't lose” language
+        (banned words list, docs/PRODUCT.md §8). Multiple tickets stack quietly:
+        “2 rolls ready” — still no urgency.
+      </div>
+    </div>
+  </div>
+
+  <p class="notes"><b>Placement:</b> the meter lives between the countdown and the verbs —
+  visible every time the popover opens, but the countdown stays the primary line: Scoot is a
+  movement app first, a collection second. The ticket panel replaces the meter row when a roll
+  is waiting (the meter keeps filling underneath for the next one).</p>
+</body>
+</html>
