@@ -1,0 +1,73 @@
+#if canImport(AppKit)
+import SwiftUI
+import ScootCore
+
+/// The left-click popover: buddy portrait, countdown, and the four verbs.
+/// Deliberately button-only — text entry in popovers of non-activating apps is
+/// flaky, so anything typed lives in the settings window (docs/TECHNICAL.md §4).
+struct PopoverView: View {
+    @ObservedObject var scheduler: NudgeScheduler
+    let onNudgeNow: () -> Void
+    let onPause: () -> Void
+    let onResume: () -> Void
+    let onOpenSettings: () -> Void
+    let onQuit: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if let sheet = SpriteSheetLoader.classic {
+                BuddyView(sheet: sheet, fps: 4, scale: 2)
+            }
+
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                Text(statusLine)
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
+
+            HStack(spacing: 8) {
+                Button("Nudge Now", action: onNudgeNow)
+                if scheduler.isPaused {
+                    Button("Resume", action: onResume)
+                } else {
+                    Button("Pause 1 Hour", action: onPause)
+                }
+            }
+
+            Divider()
+
+            HStack {
+                Button("Settings…", action: onOpenSettings)
+                Spacer()
+                Button("Quit", action: onQuit)
+            }
+        }
+        .padding(16)
+        .frame(width: 260)
+    }
+
+    private var statusLine: String {
+        switch scheduler.state {
+        case .running(let nextFire):
+            let remaining = max(0, nextFire.timeIntervalSinceNow)
+            return "Next nudge in \(Self.formatted(remaining))"
+        case .holding:
+            return "Waiting for you to come back"
+        case .paused(let until):
+            if let until {
+                return "Paused until \(until.formatted(date: .omitted, time: .shortened))"
+            }
+            return "Paused"
+        case .suspended:
+            return "Resting"
+        case .stopped:
+            return "Not running"
+        }
+    }
+
+    private static func formatted(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds.rounded())
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+#endif

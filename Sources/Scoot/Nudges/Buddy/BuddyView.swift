@@ -1,0 +1,54 @@
+#if canImport(AppKit)
+import SwiftUI
+
+/// Renders a sprite sheet as crisp pixel animation. Crispness rules
+/// (docs/TECHNICAL.md 3d): integer scale factors only, `.interpolation(.none)`,
+/// no antialiasing — one blurry sprite breaks the whole spell.
+struct BuddyView: View {
+    let sheet: SpriteSheet
+    var fps: Double? = nil
+    var scale: Int = 3
+    var message: String? = nil
+    var onTap: (() -> Void)? = nil
+
+    private var effectiveFPS: Double {
+        let value = fps ?? sheet.manifest.fps
+        return value > 0 ? value : 8
+    }
+
+    private var spriteSide: CGFloat {
+        CGFloat(sheet.manifest.frameWidth * max(1, scale))
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if let message {
+                Text(message)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.regularMaterial, in: Capsule())
+            }
+            TimelineView(.periodic(from: .now, by: 1.0 / effectiveFPS)) { context in
+                Image(nsImage: frame(at: context.date))
+                    .resizable()
+                    .interpolation(.none)
+                    .antialiased(false)
+                    .frame(width: spriteSide, height: spriteSide)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
+    }
+
+    private func frame(at date: Date) -> NSImage {
+        let count = sheet.frames.count
+        guard count > 0 else { return NSImage() }
+        let elapsed = date.timeIntervalSinceReferenceDate
+        let index = Int(elapsed * effectiveFPS) % count
+        return sheet.frames[(index + count) % count]
+    }
+}
+#endif

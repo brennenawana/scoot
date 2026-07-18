@@ -1,0 +1,19 @@
+name: core-tests
+
+# The pre-Mac safety net (docs/TECHNICAL.md §2): ScootCore is pure Swift and
+# every AppKit file is canImport-guarded, so the whole package builds — and the
+# reducer/assigner/manifest suites run — on Linux.
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (ScootCore + guarded shell)
+        run: swift build
+      - name: Test ScootCore
+        run: swift test
