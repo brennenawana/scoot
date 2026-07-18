@@ -51,6 +51,11 @@ struct BuddyView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(message.map { "Scoot buddy: \($0)" } ?? "Scoot buddy")
         .accessibilityAddTraits(onTap != nil ? .isButton : [])
+        .accessibilityAction {
+            // The trait alone doesn't wire AXPress — without this, VoiceOver
+            // (and any AX client) can see the button but never credit a move.
+            onTap?()
+        }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + settleAfter) {
                 settled = true

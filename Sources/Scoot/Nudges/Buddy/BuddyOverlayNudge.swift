@@ -16,14 +16,19 @@ final class BuddyOverlayNudge: NudgeStyle {
     private let movementIdleSeconds: TimeInterval = 120
 
     private let settings: SettingsStore
+    /// Who performs. The default is the v0.1 classic; a feature can inject
+    /// the active collectible (the buddy you pulled is the buddy that nudges).
+    private let spriteProvider: () -> SpriteSheet?
     private var panel: OverlayPanel?
     private var completion: ((NudgeOutcome) -> Void)?
     private var watchTimer: Timer?
     private var timeoutTimer: Timer?
     private var maxIdleSeen: TimeInterval = 0
 
-    init(settings: SettingsStore) {
+    init(settings: SettingsStore,
+         spriteProvider: @escaping () -> SpriteSheet? = { SpriteSheetLoader.classic }) {
         self.settings = settings
+        self.spriteProvider = spriteProvider
     }
 
     func prepare() {
@@ -32,7 +37,7 @@ final class BuddyOverlayNudge: NudgeStyle {
 
     func fire(_ context: NudgeContext, completion: @escaping (NudgeOutcome) -> Void) {
         dismiss(outcome: .cancelled) // at most one performance at a time
-        guard let sheet = SpriteSheetLoader.classic else {
+        guard let sheet = spriteProvider() ?? SpriteSheetLoader.classic else {
             completion(.completed)
             return
         }

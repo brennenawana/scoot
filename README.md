@@ -17,11 +17,16 @@ Simple at the core, built for delight, designed to be extended.
 
 ## Status
 
-**v0.1 scaffold.** The architecture, docs, and a working skeleton (menu bar
-presence, judgment-heavy interval scheduler, three nudge styles, settings,
-launch-at-login, one live experiment seam) — authored blind on Linux, awaiting
-its first macOS build. If you're the person with the Mac: start with
+**v0.2 — the buddy is real.** v0.1 (menu bar presence, judgment-heavy interval
+scheduler, three nudge styles, settings, launch-at-login, experiment seam) is
+verified green on a real Mac. v0.2 adds the collection loop: moving fills the
+roll meter, five scoots earn a roll, rolls reveal the 12-species launch cast
+with published odds, buddies get named (and become the menu bar icon and nudge
+performer), duplicates become sparks. All of it is a plug-in behind the
+`ScootFeature` seam — unplug it and the simple nudger remains. Checklist:
 [docs/VERIFY.md](docs/VERIFY.md).
+
+![The launch cast — idle and dance frames](docs/assets/cast-preview.png)
 
 ## Quickstart (macOS 14+, Command Line Tools only)
 

@@ -1,4 +1,9 @@
-# Scoot v0.1 — On-Mac Verification Checklist
+# Scoot — On-Mac Verification Checklist
+
+Sections 0–8 are the v0.1 checklist (verified green 2026-07-18); section 9 is
+v0.2's collection loop.
+
+# v0.1 — Skeleton with a heartbeat
 
 This scaffold was authored in a Linux container with no macOS SDK — it has **never
 been compiled against AppKit**. The pure core (`ScootCore`) is covered by tests
@@ -96,8 +101,73 @@ scripts/make-dmg.sh
 - [ ] DMG opens with drag-to-Applications; app launches on a *different* Mac
       with no Gatekeeper "damaged" alert
 
+## 9. v0.2 — The buddy is real (collection loop)
+
+Ground truth is `~/Library/Application Support/Scoot/collection.json` (schema
+v2, human-readable) plus `events.jsonl`. Drive the UI via the AX API — status
+item under `AXExtrasMenuBar`, windows under `kAXWindowsAttribute`; the overlay
+buddy and dex cells answer `AXPress`. SwiftUI text fields need real keystrokes
+(AX `setValue` bypasses the binding).
+
+**Fresh install (delete collection.json first):**
+- [ ] First launch grants exactly one roll ticket (`first_roll_granted` event;
+      file shows `rollTickets: 1`, `owned: []`) — never regranted once any
+      scoot or buddy exists
+- [ ] Popover shows "Your first buddy is waiting." + Roll; no meter yet
+
+**The reveal:**
+- [ ] Roll → capsule wiggle (longer for rarer — 0.8s Common → 2.5s Secret) →
+      burst → buddy + species plate + rarity badge + confetti → naming
+- [ ] First roll is always a Common (the controlled first impression)
+- [ ] Name field is pre-filled from the species' suggestions, focused, and
+      keyboard-ready; cmd+A / cmd+V work (the invisible Edit menu — an
+      LSUIElement regression risk); "Meet <name>" commits (`buddy_named`)
+- [ ] Closing the window mid-reveal keeps the buddy (suggested name stands) —
+      a pull can never be lost or cancelled
+- [ ] Skip appears only after the first-ever reveal
+- [ ] Pull is persisted (`roll_redeemed` event) *before* the animation plays —
+      kill Scoot mid-reveal and the buddy is in collection.json
+
+**The earn loop:**
+- [ ] Click the dancing overlay buddy → `nudge_outcome acknowledged
+      primary=true` → `scoot_credited` → meter +1, `scootsToday` +1, active
+      buddy's `bondScoots` +1
+- [ ] Second manual credit within 10 min → `scoot_credit_suppressed`, no state
+      change (anti-cheese)
+- [ ] Auto-credit: step away ≥2 min after a nudge → `movementDetected` credits
+      (needs real absence — idle can't be faked)
+- [ ] 5th scoot mints a ticket (`roll_ticket_earned`); meter resets, ticket
+      panel replaces meter in the popover ("2 rolls ready" when stacked)
+- [ ] Day rollover resets `scootsToday`, never the meter
+- [ ] Style previews in Settings credit nothing
+
+**Scootdex:**
+- [ ] Popover + right-click menu both open it; "N of 12 found · %" and sparks
+      in the header
+- [ ] Owned cells animate slowly with the given name; unpulled cells are
+      silhouettes + "???" + tier name; the Secret slot shows only "?" — no
+      silhouette, no tier — until pulled
+- [ ] Inline rename commits on return or focus loss; blank names ignored
+- [ ] "Put on duty" switches the active buddy → menu bar icon, popover
+      portrait, and the next overlay performer all change species
+- [ ] Odds footer matches `RarityTier.disclosure` verbatim
+- [ ] Duplicate roll → "+N ✦ sparks" beat (10/20/40/80/160 by rarity), sparks
+      balance updates live, ticket still spent, `owned` unchanged
+
+**The plug-in guarantee:**
+- [ ] Comment out the `CollectionFeature.make` registration in
+      AppCoordinator.start() → app builds and runs as the exact v0.1 nudger
+      (classic sprite, no meter/Roll/Scootdex anywhere); collection.json is
+      left untouched
+- [ ] Corrupt collection.json → rescued to `.bak`, fresh start
+      (`collection_rescued`); file with `schemaVersion: 99` → feature stays
+      unplugged for the whole session, v0.1 behavior, file untouched
+
+**Exit bar (needs humans):** hand a build to a friend — do they name their
+buddy in the first session? (>60% across friends & family = ROADMAP v0.2 exit.)
+
 ## Reporting
 
-File findings as issues tagged `v0.1-verify` (or just fix small compile errors and
-note them in the PR). Compile fixes teach us which blind-authoring patterns to
-avoid next time.
+File findings as issues tagged `v0.1-verify` / `v0.2-verify` (or just fix small
+compile errors and note them in the PR). Compile fixes teach us which
+blind-authoring patterns to avoid next time.

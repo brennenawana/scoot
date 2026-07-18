@@ -6,17 +6,28 @@ import AppKit
 /// template image so it follows dark mode and menu bar tint.
 final class StatusIconAnimator {
     private weak var button: NSStatusBarButton?
-    private let idleImage: NSImage?
-    private let frames: [NSImage]
+    private let defaultIdle: NSImage?
+    private let defaultFrames: [NSImage]
+    /// Feature-supplied override (v0.2: the active buddy IS the menu bar
+    /// icon). Nil falls back to the stock classic icons.
+    private var overrideIcons: StatusIconSet?
     private var timer: Timer?
     private var frameIndex = 0
     private var stopAt = Date.distantPast
 
+    private var idleImage: NSImage? { overrideIcons?.idle ?? defaultIdle }
+    private var frames: [NSImage] { overrideIcons?.frames ?? defaultFrames }
+
     init(button: NSStatusBarButton?) {
         self.button = button
-        idleImage = Self.loadIcon(named: "icon-idle", template: true)
-        frames = (1...4).compactMap { Self.loadIcon(named: "icon-frame-\($0)", template: false) }
+        defaultIdle = Self.loadIcon(named: "icon-idle", template: true)
+        defaultFrames = (1...4).compactMap { Self.loadIcon(named: "icon-frame-\($0)", template: false) }
         button?.image = idleImage
+    }
+
+    func setIcons(_ icons: StatusIconSet?) {
+        overrideIcons = icons
+        if timer == nil { button?.image = idleImage }
     }
 
     func playBurst(duration: TimeInterval) {

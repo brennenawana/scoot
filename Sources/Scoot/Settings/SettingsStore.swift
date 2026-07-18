@@ -60,6 +60,14 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(telemetryEnabled, forKey: "telemetryEnabled") }
     }
 
+    /// First reveal is unskippable (the moment must land once); afterwards a
+    /// Skip control appears (docs/PRODUCT.md §1). Not @Published — read at
+    /// reveal time only.
+    var hasSeenReveal: Bool {
+        get { defaults.bool(forKey: "hasSeenReveal") }
+        set { defaults.set(newValue, forKey: "hasSeenReveal") }
+    }
+
     var overlayCorner: OverlayCorner {
         get { OverlayCorner(rawValue: overlayCornerRaw) ?? .bottomRight }
         set { overlayCornerRaw = newValue.rawValue }

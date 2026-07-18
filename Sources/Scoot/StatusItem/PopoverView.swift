@@ -7,6 +7,13 @@ import ScootCore
 /// flaky, so anything typed lives in the settings window (docs/TECHNICAL.md §4).
 struct PopoverView: View {
     @ObservedObject var scheduler: NudgeScheduler
+    /// Feature-supplied performer; nil falls back to the classic placeholder.
+    var portrait: SpriteSheet? = nil
+    /// Feature-supplied section between the status line and the verbs
+    /// (v0.2: the roll meter / ticket panel).
+    var accessory: AnyView? = nil
+    /// Feature-supplied leading footer control (v0.2: the Scootdex button).
+    var footerAccessory: AnyView? = nil
     let onNudgeNow: () -> Void
     let onPause: () -> Void
     let onResume: () -> Void
@@ -15,7 +22,7 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            if let sheet = SpriteSheetLoader.classic {
+            if let sheet = portrait ?? SpriteSheetLoader.classic {
                 BuddyView(sheet: sheet, fps: 4, scale: 2)
             }
 
@@ -23,6 +30,10 @@ struct PopoverView: View {
                 Text(statusLine)
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.primary)
+            }
+
+            if let accessory {
+                accessory
             }
 
             HStack(spacing: 8) {
@@ -37,6 +48,9 @@ struct PopoverView: View {
             Divider()
 
             HStack {
+                if let footerAccessory {
+                    footerAccessory
+                }
                 Button("Settings…", action: onOpenSettings)
                 Spacer()
                 Button("Quit", action: onQuit)

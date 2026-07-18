@@ -12,7 +12,12 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private let quickMenu = NSMenu()
+    // Injected by the coordinator, and called on every show (content is built
+    // on show and dropped on close: NSPopover retains its contentViewController,
+    // and a retained NSHostingView keeps TimelineViews ticking — ~8% CPU
+    // forever after the first open).
     private let makePopoverContent: () -> NSViewController
+    private let extraMenuItems: [NSMenuItem]
 
     private let onNudgeNow: () -> Void
     private let onPause: () -> Void
@@ -20,12 +25,15 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     private let onOpenSettings: () -> Void
     private let onQuit: () -> Void
 
-    init(scheduler: NudgeScheduler,
+    init(makePopoverContent: @escaping () -> NSViewController,
+         extraMenuItems: [NSMenuItem] = [],
          onNudgeNow: @escaping () -> Void,
          onPause: @escaping () -> Void,
          onResume: @escaping () -> Void,
          onOpenSettings: @escaping () -> Void,
          onQuit: @escaping () -> Void) {
+        self.makePopoverContent = makePopoverContent
+        self.extraMenuItems = extraMenuItems
         self.onNudgeNow = onNudgeNow
         self.onPause = onPause
         self.onResume = onResume
@@ -34,19 +42,6 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         animator = StatusIconAnimator(button: statusItem.button)
-        // Content is built on show and dropped on close: NSPopover retains its
-        // contentViewController, and a retained NSHostingView keeps TimelineViews
-        // ticking (~8% CPU forever after the first open).
-        makePopoverContent = {
-            NSHostingController(rootView: PopoverView(
-                scheduler: scheduler,
-                onNudgeNow: onNudgeNow,
-                onPause: onPause,
-                onResume: onResume,
-                onOpenSettings: onOpenSettings,
-                onQuit: onQuit
-            ))
-        }
         super.init()
 
         popover.behavior = .transient
@@ -116,6 +111,10 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
         quickMenu.addItem(makeItem(title: "Pause 1 Hour", action: #selector(pauseSelected)))
         quickMenu.addItem(makeItem(title: "Resume", action: #selector(resumeSelected)))
         quickMenu.addItem(.separator())
+        if !extraMenuItems.isEmpty {
+            for item in extraMenuItems { quickMenu.addItem(item) }
+            quickMenu.addItem(.separator())
+        }
         quickMenu.addItem(makeItem(title: "Settings…", action: #selector(settingsSelected), key: ","))
         quickMenu.addItem(.separator())
         quickMenu.addItem(makeItem(title: "Quit Scoot", action: #selector(quitSelected), key: "q"))
