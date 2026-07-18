@@ -54,6 +54,9 @@ struct BuddyView: View {
         .onTapGesture {
             onTap?()
         }
+        // No handler → no hit-testing: a handler-less sprite must never eat
+        // clicks meant for its container (Scootdex cells select on tap).
+        .allowsHitTesting(onTap != nil)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(message.map { "Scoot buddy: \($0)" } ?? "Scoot buddy")
         .accessibilityAddTraits(onTap != nil ? .isButton : [])
