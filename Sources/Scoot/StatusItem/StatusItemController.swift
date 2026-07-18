@@ -6,12 +6,13 @@ import ScootCore
 /// Owns the NSStatusItem. Left-click toggles the popover; right-click shows the
 /// quick menu (the standard assign-menu-then-performClick-then-clear trick, so
 /// left-click keeps opening the popover afterwards).
-final class StatusItemController: NSObject, NSMenuDelegate {
+final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     let animator: StatusIconAnimator
 
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private let quickMenu = NSMenu()
+    private let makePopoverContent: () -> NSViewController
 
     private let onNudgeNow: () -> Void
     private let onPause: () -> Void
@@ -33,18 +34,24 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         animator = StatusIconAnimator(button: statusItem.button)
+        // Content is built on show and dropped on close: NSPopover retains its
+        // contentViewController, and a retained NSHostingView keeps TimelineViews
+        // ticking (~8% CPU forever after the first open).
+        makePopoverContent = {
+            NSHostingController(rootView: PopoverView(
+                scheduler: scheduler,
+                onNudgeNow: onNudgeNow,
+                onPause: onPause,
+                onResume: onResume,
+                onOpenSettings: onOpenSettings,
+                onQuit: onQuit
+            ))
+        }
         super.init()
 
         popover.behavior = .transient
         popover.animates = true
-        popover.contentViewController = NSHostingController(rootView: PopoverView(
-            scheduler: scheduler,
-            onNudgeNow: onNudgeNow,
-            onPause: onPause,
-            onResume: onResume,
-            onOpenSettings: onOpenSettings,
-            onQuit: onQuit
-        ))
+        popover.delegate = self
 
         if let button = statusItem.button {
             button.target = self
@@ -80,8 +87,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            if popover.contentViewController == nil {
+                popover.contentViewController = makePopoverContent()
+            }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        popover.contentViewController = nil
     }
 
     private func showQuickMenu() {
