@@ -1,6 +1,6 @@
 {
   "name": "buddy-dumpling-dog",
-  "frameWidth": 32,
+  "frameWidth": 40,
   "frameHeight": 32,
   "frameCount": 4,
   "fps": 10.0

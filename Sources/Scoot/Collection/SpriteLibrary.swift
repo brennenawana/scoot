@@ -26,12 +26,21 @@ enum SpriteLibrary {
         return sheet.manifest.fps >= 8 ? last : first
     }
 
+    /// Dance frames carry a horizontal apron (frameWidth > frameHeight); the
+    /// character itself lives in the central square.
+    private static func squareCore(of frame: NSImage) -> CGImage? {
+        guard let cg = frame.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        guard cg.width > cg.height else { return cg }
+        let inset = (cg.width - cg.height) / 2
+        return cg.cropping(to: CGRect(x: inset, y: 0, width: cg.height, height: cg.height))
+    }
+
     /// Black+alpha template of the idle pose for unpulled Scootdex slots —
     /// the anticipation surface (docs/PRODUCT.md §2).
     static func silhouette(for species: Buddy) -> NSImage? {
         if let cached = silhouettes[species.spriteSheet] { return cached }
         guard let sheet = sheet(for: species),
-              let cg = idleFrame(of: sheet).cgImage(forProposedRect: nil, context: nil, hints: nil)
+              let cg = squareCore(of: idleFrame(of: sheet))
         else { return nil }
         let image = NSImage(size: NSSize(width: cg.width, height: cg.height))
         image.lockFocus()
@@ -49,20 +58,58 @@ enum SpriteLibrary {
         return image
     }
 
-    /// Menu bar icons derived from a species sheet: the 32px art is an exact
-    /// x2 of 16px originals, so the downscale recovers the authored pixels.
-    /// Idle is a template (dark-mode/tint correct); burst frames keep color,
-    /// mirroring the stock icon set.
+    /// Menu bar icons for a species. Preferred source: the hand-authored
+    /// menubar atlas (simplified small-size art — the detailed sprite mushes
+    /// at 18 pt). Frame 0 is the pre-blackened resting silhouette (marked
+    /// template so it follows dark mode / tint); frames 1-4 the colored
+    /// bounce. Falls back to deriving from the dance sheet's square core.
     static func statusIcons(for species: Buddy) -> StatusIconSet? {
+        if let atlas = menuBarAtlasIcons(for: species) { return atlas }
         guard let sheet = sheet(for: species) else { return nil }
-        guard let idleCG = idleFrame(of: sheet)
-            .cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        guard let idleCG = squareCore(of: idleFrame(of: sheet)) else { return nil }
         let frames = sheet.frames.compactMap { frame -> NSImage? in
-            guard let cg = frame.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+            guard let cg = squareCore(of: frame) else { return nil }
             return menuBarIcon(from: cg, template: false)
         }
         guard frames.count == sheet.frames.count else { return nil }
         return StatusIconSet(idle: menuBarIcon(from: idleCG, template: true), frames: frames)
+    }
+
+    /// Slices buddy-<id>-menubar(@2x).png — horizontal strips of five 18px
+    /// frames — into NSImages carrying both Retina reps.
+    private static func menuBarAtlasIcons(for species: Buddy) -> StatusIconSet? {
+        let name = "\(species.spriteSheet)-menubar"
+        var cgByScale: [Int: CGImage] = [:]
+        for (scale, suffix) in [(1, ""), (2, "@2x")] {
+            guard let url = Bundle.module.url(forResource: "\(name)\(suffix)",
+                                              withExtension: "png",
+                                              subdirectory: "MenuBar"),
+                  let data = try? Data(contentsOf: url),
+                  let rep = NSBitmapImageRep(data: data),
+                  let cg = rep.cgImage else { return nil }
+            cgByScale[scale] = cg
+        }
+        guard let base = cgByScale[1], base.height > 0, base.width % base.height == 0 else { return nil }
+        let count = base.width / base.height
+        guard count == 5 else { return nil }
+
+        let pointSize = NSSize(width: 18, height: 18)
+        var icons: [NSImage] = []
+        for index in 0..<count {
+            let image = NSImage(size: pointSize)
+            for (scale, cg) in cgByScale {
+                let side = cg.height
+                guard let frame = cg.cropping(to: CGRect(x: index * side, y: 0,
+                                                         width: side, height: side)),
+                      side == 18 * scale else { return nil }
+                let rep = NSBitmapImageRep(cgImage: frame)
+                rep.size = pointSize
+                image.addRepresentation(rep)
+            }
+            image.isTemplate = index == 0
+            icons.append(image)
+        }
+        return StatusIconSet(idle: icons[0], frames: Array(icons[1...]))
     }
 
     /// 18 pt icon with @1x and @2x reps (matching StatusIconAnimator's stock

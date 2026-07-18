@@ -1,6 +1,6 @@
 {
   "name": "buddy-skater-robot",
-  "frameWidth": 32,
+  "frameWidth": 40,
   "frameHeight": 32,
   "frameCount": 4,
   "fps": 10.0

@@ -40,6 +40,21 @@ def vsquash(grid, by=2):
     return ["." * len(grid[0])] * by + sampled
 
 
+def pad_h(grid, pad):
+    """Widen a grid with `pad` transparent columns each side — the apron that
+    lets shear lean a sprite without truncating art at the canvas edge."""
+    return ["." * pad + row + "." * pad for row in grid]
+
+
+def vstretch(grid, by=2):
+    """Vertically stretch by `by` rows (nearest-neighbor resample, anchored to
+    the ground line). Returns len(grid)+by rows; callers blit with a negative
+    y offset, so keep >= `by` empty top rows in the source art."""
+    size = len(grid)
+    new_h = size + by
+    return [grid[min(size - 1, round(i * size / new_h))] for i in range(new_h)]
+
+
 def shift_y(grid, dy):
     """Move a sprite down (dy>0) or up (dy<0), dropping rows off the edge —
     the bob of a floating species. Only safe when the vacated rows are empty."""

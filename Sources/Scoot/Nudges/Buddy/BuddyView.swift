@@ -23,8 +23,14 @@ struct BuddyView: View {
         return value > 0 ? value : 8
     }
 
-    private var spriteSide: CGFloat {
+    // Frames may be non-square (v0.2 dance frames carry a horizontal apron
+    // so leans never clip) — honor both dimensions.
+    private var spriteWidth: CGFloat {
         CGFloat(sheet.manifest.frameWidth * max(1, scale))
+    }
+
+    private var spriteHeight: CGFloat {
+        CGFloat(sheet.manifest.frameHeight * max(1, scale))
     }
 
     var body: some View {
@@ -41,7 +47,7 @@ struct BuddyView: View {
                     .resizable()
                     .interpolation(.none)
                     .antialiased(false)
-                    .frame(width: spriteSide, height: spriteSide)
+                    .frame(width: spriteWidth, height: spriteHeight)
             }
         }
         .contentShape(Rectangle())

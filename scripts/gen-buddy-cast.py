@@ -21,11 +21,18 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pixellib import (blank, blit, grid_to_pixels, hstack, shear, shift_y,
-                      validate, vsquash, vstack, write_png)
+from pixellib import (blank, blit, grid_to_pixels, hstack, pad_h,
+                      recolor_template, shear, shift_y, validate, vsquash,
+                      vstack, vstretch, write_png)
 
 REPO = Path(__file__).resolve().parents[1]
 SPRITES = REPO / "Sources" / "Scoot" / "Resources" / "Sprites"
+MENUBAR = REPO / "Sources" / "Scoot" / "Resources" / "MenuBar"
+
+# Dance frames carry a transparent apron so the shear lean never truncates
+# art at the canvas edge (a full-width sprite used to lose its outermost
+# pixels mid-dance). 16px art + 2px each side = 20px frames, 40px shipped.
+APRON = 2
 
 OUTLINE = (59, 42, 40, 255)      # shared warm-dark outline (design tokens)
 EYE = (43, 27, 24, 255)
@@ -46,6 +53,24 @@ def palette(**colors):
 ROUND_BLOB = {
     "id": "round-blob",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "................",
+        "....oooooooo....",
+        "...oBBBBBBBBo...",
+        "..oBHBBBBBBBBo..",
+        "..oBWEBBBBWEBo..",
+        "..oBEEBBBBEEBo..",
+        "..oBKBBBBBKBBo..",
+        "..oBBBMMBBBBBo..",
+        "..oSBBBBBBBBSo..",
+        "...oSSSSSSSSo...",
+        "....oooooooo....",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         B=(255, 138, 112, 255),  # body coral
         S=(224, 107, 82, 255),   # shade
@@ -76,6 +101,24 @@ ROUND_BLOB = {
 BEAN_CAT = {
     "id": "bean-cat",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "...oo.....oo....",
+        "...oPo...oPo....",
+        "..oBBBo.oBBBo...",
+        "..oBBBBoBBBBo...",
+        ".oBBBBBBBBBBBo..",
+        ".oBEBBBBBBEBBo..",
+        ".oBBBBNBBBBBBo..",
+        ".oBKBBBBBBKBBo..",
+        ".oSBBBBBBBBBSo..",
+        "..oSSSSSSSSSo...",
+        "...ooooooooo....",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         B=(239, 207, 165, 255),  # loaf
         S=(214, 171, 120, 255),  # shade
@@ -106,6 +149,24 @@ BEAN_CAT = {
 DUMPLING_DOG = {
     "id": "dumpling-dog",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "......oo........",
+        ".....oRRo.......",
+        "....oRRRRo......",
+        "...ooBBBBoo.....",
+        "..oBBBBBBBBBo...",
+        ".oRBBEBBBEBBRo..",
+        ".oRBBBNNBBBBRo..",
+        ".oBBKBNNBKBBBo..",
+        "..oBBBBBBBBBo...",
+        "..oSSoBBBoSSo...",
+        "...ooooooooo....",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         B=(242, 227, 201, 255),  # dumpling cream
         S=(216, 195, 160, 255),  # shade
@@ -136,6 +197,24 @@ DUMPLING_DOG = {
 TRAFFIC_CONE = {
     "id": "traffic-cone",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "......oo........",
+        ".....oOOo.......",
+        ".....oOOo.......",
+        "....oBBBBo......",
+        "....oEBBEo......",
+        "...oOOOOOOo.....",
+        "...oOOOOOOo.....",
+        "..oBBBBBBBBo....",
+        ".oOOOOOOOOOOo...",
+        ".oooooooooooo...",
+        ".oDDDDDDDDDDo...",
+        "..oooooooooo....",
+        "................",
+        "................",
+    ],
     "palette": palette(
         O=(255, 122, 51, 255),   # cone orange
         D=(217, 91, 31, 255),    # dark orange / base
@@ -165,6 +244,24 @@ TRAFFIC_CONE = {
 BABY_GHOST = {
     "id": "baby-ghost",
     "style": "float",
+    "menubar": [
+        "................",
+        "................",
+        "................",
+        "....oooooo......",
+        "...oBBBBBBo.....",
+        "..oBBBBBBBBo....",
+        "..oBEEBBEEBo....",
+        "..oBEEBBEEBo....",
+        "..oBBBMMBBBo....",
+        "..oBBBBBBBBo....",
+        "..oBSBBSBBSo....",
+        "...oo.oo.oo.....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": {
         ".": (0, 0, 0, 0),
         "o": (74, 84, 120, 255),     # cool outline
@@ -197,6 +294,24 @@ BABY_GHOST = {
 SUNGLASSES_FROG = {
     "id": "sunglasses-frog",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "................",
+        "..ooo.....ooo...",
+        ".oBBBo...oBBBo..",
+        ".oBBBBoooBBBBo..",
+        ".oGGGGGGGGGGGo..",
+        ".oGLGGGGGGLGGo..",
+        ".oBBBBBBBBBBBo..",
+        ".oBBMMMMMMBBBo..",
+        ".oSBBBBBBBBBSo..",
+        "..oSSSSSSSSSo...",
+        "...ooooooooo....",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         B=(107, 191, 89, 255),   # frog green
         S=(76, 158, 74, 255),    # shade
@@ -228,6 +343,24 @@ SUNGLASSES_FROG = {
 HOUSEPLANT = {
     "id": "houseplant",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "...oo...oo......",
+        "..oGGo.oGGo.....",
+        "..oGLGoGLGo.....",
+        "...oGLGLGo......",
+        "....oLLLo.......",
+        "...ooooooo......",
+        "...oPPPPPo......",
+        "...oPEPPEPo.....",
+        "...oQPPPPQo.....",
+        "....ooooo.......",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         L=(76, 158, 94, 255),    # leaf
         G=(123, 196, 127, 255),  # leaf light
@@ -259,6 +392,24 @@ HOUSEPLANT = {
 SKATER_ROBOT = {
     "id": "skater-robot",
     "style": "bounce",
+    "menubar": [
+        "................",
+        ".......A........",
+        ".......o........",
+        "....oooooooo....",
+        "...oPPPPPPPPo...",
+        "...oPCCPPCCPo...",
+        "...oPPPPPPPPo...",
+        "...oPPGGGGPPo...",
+        "....oooooooo....",
+        "......oGGo......",
+        ".....oGHHGo.....",
+        "......oGGo......",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         P=(201, 216, 232, 255),  # face panel
         B=(159, 180, 199, 255),  # body steel
@@ -291,6 +442,24 @@ SKATER_ROBOT = {
 HOODIE_FOX = {
     "id": "hoodie-fox",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "....oooooooo....",
+        "...oHHHHHHHHo...",
+        "..oHHooooooHHo..",
+        "..oHoFFFFFFoHo..",
+        "..oHoFEFFEFoHo..",
+        "..oHoFFCCFFoHo..",
+        "..oHooFCCFooHo..",
+        "..oHHHooooHHHo..",
+        "...oHHHHHHHHo...",
+        "....oooooooo....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         H=(142, 147, 166, 255),  # hood grey
         D=(110, 115, 133, 255),  # hood shade
@@ -321,6 +490,24 @@ HOODIE_FOX = {
 TINY_DRAGON = {
     "id": "tiny-dragon",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        "....o.....o.....",
+        "...oDo...oDo....",
+        "..ooDDoooDDoo...",
+        ".oGoDDDDDDDoGo..",
+        ".oGoDEDDDEDoGo..",
+        "..ooDDDDDDDoo...",
+        "...oDBBBBBDo....",
+        "...oDDBBBDDo....",
+        "....oDDDDDo.....",
+        "....oDo.oDo.....",
+        "....oo...oo.....",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": palette(
         D=(63, 167, 150, 255),   # scale teal
         S=(44, 122, 111, 255),   # shade
@@ -352,6 +539,24 @@ TINY_DRAGON = {
 KNIGHT_BEETLE = {
     "id": "knight-beetle",
     "style": "bounce",
+    "menubar": [
+        "................",
+        "................",
+        ".......oo.......",
+        "......oHHo......",
+        "......oHHo......",
+        ".....ooHHoo.....",
+        "....oLLLLLLo....",
+        "...oLAAAAAALo...",
+        "..oAAAAAAAAAAo..",
+        "..oAVVVVVVVVAo..",
+        "..oAAAAAAAAAAo..",
+        "...oASSSSSSAo...",
+        "....oooooooo....",
+        "...oSo....oSo...",
+        "................",
+        "................",
+    ],
     "palette": palette(
         A=(74, 91, 140, 255),    # armor navy
         S=(54, 67, 107, 255),    # armor shade
@@ -382,6 +587,24 @@ KNIGHT_BEETLE = {
 THUNDERCLOUD = {
     "id": "thundercloud",
     "style": "storm",
+    "menubar": [
+        "................",
+        "................",
+        "................",
+        "....oooooo......",
+        "...oWWWWWWoo....",
+        "..oWCCCCCCCWo...",
+        ".oCRRCCCCRRCo...",
+        ".oCEECCCCEECo...",
+        ".oCCCCDDCCCCo...",
+        "..oDDDDDDDDo....",
+        "...oooooooo.....",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
     "palette": {
         ".": (0, 0, 0, 0),
         "o": (60, 60, 72, 255),
@@ -441,28 +664,71 @@ CAST = [
 
 
 def dance_frames(species):
-    idle = species["idle"]
+    """4 padded frames, 20x16 each. The apron guarantees leans lose nothing."""
+    idle = pad_h(species["idle"], APRON)
     style = species["style"]
     if style == "bounce":
-        return [shear(idle, "left"), vsquash(idle), shear(idle, "right"), idle]
-    if style == "float":
-        return [idle, shift_y(shear(idle, "left"), -1),
-                idle, shift_y(shear(idle, "right"), -1)]
-    if style == "storm":
-        return [idle, shift_y(idle, -1), species["alt"], shift_y(idle, -1)]
-    raise ValueError(f"unknown style {style}")
+        frames = [shear(idle, "left"), vsquash(idle), shear(idle, "right"), idle]
+    elif style == "float":
+        frames = [idle, shift_y(shear(idle, "left"), -1),
+                  idle, shift_y(shear(idle, "right"), -1)]
+    elif style == "storm":
+        alt = pad_h(species["alt"], APRON)
+        frames = [idle, shift_y(idle, -1), alt, shift_y(idle, -1)]
+    else:
+        raise ValueError(f"unknown style {style}")
+
+    opaque = lambda g: sum(ch != "." for row in g for ch in row)
+    for i, frame in enumerate(frames):
+        if style == "bounce" and i == 1:
+            continue  # squash resamples rows away by design
+        if style == "storm" and i == 2:
+            continue  # the bolt frame is different art
+        assert opaque(frame) == opaque(idle), \
+            f"{species['id']} frame {i} clips art ({opaque(frame)} vs {opaque(idle)})"
+    return frames
 
 
 def fps_for(style):
     return 10.0 if style == "bounce" else 6.0
 
 
+def menubar_atlas(species, scale):
+    """5-frame 18px strip for the status item: frame 0 is the template
+    silhouette (the resting icon), frames 1-4 the colored bounce with baked
+    y offsets — same recipe as v0.1's dedicated icons, but from the species'
+    simplified small-size art, not a downscale of the detailed sprite."""
+    pal = species["palette"]
+    grid = species["menubar"]
+    side = 18 * scale
+    beats = [
+        (grid, 0),                 # 0: idle -> template
+        (vsquash(grid, 2), 0),     # 1: squash
+        (grid, -1),                # 2: up
+        (vstretch(grid, 2), -2),   # 3: stretch (18 rows, blits past the top)
+        (grid, -1),                # 4: up
+    ]
+    frames = []
+    for index, (g, dy) in enumerate(beats):
+        canvas = blit(blank(side, side), grid_to_pixels(g, pal, scale),
+                      scale, (1 + dy) * scale)
+        if index == 3:
+            # The stretch frame may only shed empty apron rows off the top.
+            tall = grid_to_pixels(g, pal, 1)
+            clipped = sum(p[3] != 0 for row in tall[:1] for p in row)
+            assert clipped == 0, f"{species['id']} menubar stretch clips art"
+        frames.append(recolor_template(canvas) if index == 0 else canvas)
+    return hstack(frames)
+
+
 def main():
     print("Cast sprites:")
     preview_rows = []
+    mb_preview = []
     for species in CAST:
         pal = species["palette"]
         validate(species["idle"], pal)
+        validate(species["menubar"], pal)
         if "alt" in species:
             validate(species["alt"], pal)
         frames = dance_frames(species)
@@ -472,7 +738,7 @@ def main():
         write_png(SPRITES / f"{name}.png", strip, repo_root=REPO)
         manifest = {
             "name": name,
-            "frameWidth": 32,
+            "frameWidth": (16 + 2 * APRON) * 2,  # 40: 20px padded art, x2
             "frameHeight": 32,
             "frameCount": len(frames),
             "fps": fps_for(species["style"]),
@@ -481,13 +747,20 @@ def main():
         mpath.write_text(json.dumps(manifest, indent=2) + "\n")
         print(f"  wrote {mpath.relative_to(REPO)}")
 
-        preview_rows.append(hstack(
-            [grid_to_pixels(g, pal, scale=8) for g in [species["idle"]] + frames]
-        ))
+        for scale, suffix in ((1, ""), (2, "@2x")):
+            write_png(MENUBAR / f"{name}-menubar{suffix}.png",
+                      menubar_atlas(species, scale), repo_root=REPO)
 
-    print("Preview:")
+        preview_rows.append(hstack(
+            [grid_to_pixels(g, pal, scale=8) for g in [pad_h(species["idle"], APRON)] + frames]
+        ))
+        mb_preview.append(menubar_atlas(species, 4))
+
+    print("Previews:")
     write_png(REPO / "docs" / "assets" / "cast-preview.png",
               vstack(preview_rows), repo_root=REPO)
+    write_png(REPO / "docs" / "assets" / "menubar-preview.png",
+              vstack(mb_preview), repo_root=REPO)
     print("Done.")
 
 

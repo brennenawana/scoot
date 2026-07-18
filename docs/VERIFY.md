@@ -154,6 +154,18 @@ buddy and dex cells answer `AXPress`. SwiftUI text fields need real keystrokes
 - [ ] Duplicate roll → "+N ✦ sparks" beat (10/20/40/80/160 by rarity), sparks
       balance updates live, ticket still spent, `owned` unchanged
 
+**Sprites & menu bar art:**
+- [ ] Dance frames carry a 2px transparent apron (40×32 shipped frames) so
+      the lean beats never clip art at the edge — watch a full-width species
+      (Bean Cat's tail, Tiny Dragon's wings) through a whole dance; the
+      generator also asserts lean frames preserve every opaque pixel
+- [ ] Menu bar uses the species' dedicated simplified atlas
+      (`buddy-<id>-menubar[@2x].png`, frame 0 = template silhouette, 1–4 =
+      colored bounce) — the resting icon follows dark mode/tint, the whole
+      character fits with breathing room, and a celebration bounces it
+- [ ] docs/assets/menubar-preview.png: every silhouette identifiable at a
+      glance (the 18px test from DESIGN.md)
+
 **The plug-in guarantee:**
 - [ ] Comment out the `CollectionFeature.make` registration in
       AppCoordinator.start() → app builds and runs as the exact v0.1 nudger
