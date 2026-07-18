@@ -1,0 +1,83 @@
+<!-- @dsCard group="Buddies" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Launch Cast Sheet</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:660px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:22px 0 10px; }
+  .hero { display:flex; align-items:center; gap:20px; background:var(--panel);
+          border:1px solid var(--hairline); border-radius:14px; padding:18px; max-width:660px; }
+  /* The real v0.1 placeholder sprite, dancing: 4-frame strip stepped by CSS. */
+  .sprite { width:32px; height:32px; transform:scale(4); transform-origin:top left;
+            image-rendering:pixelated;
+            background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAADaInAlAAABXklEQVR42u2asQ3CQAxFMwYSBS0CiQXYgjVoqBmAgiGYgSEYhE2CFEhxik6xz/bZ4b4ld1z+z/dTRMBdh0KhUCgUCoUKV8fdtpc0EgQAIG6JAxk/398vombPBQA0CoAbcUZBa4NZK5+JzuuZttVcAECjALgRZxy0mR+jfLL3LdSZzQEANA5AdUHu4JUCV/ejlI81+AAAADABqPzorXXjUX0BAADgC8BE+Ff79Wpo8sVnzuUCV9Nnnjf3w8zDbQ4AAAAkwuNBrvDcOWrgpfrc89Z+uHm4zQEAAID00fO4fbv0i0bmPPmRK9UnXqeaH2IebnMAAACA9PpxPWyS1nrt4r7+SH1o+dHOo1SX6wMAAIA6fwtH/eHFy4f4J+ilLYYAgIUD8D6fhpYKj9ehBq+lG8UHVTeKPgBoHYCckdIuXYaU6kbxIV1E8dIHAK0D4L0mHmUpNMoyqtuaPgD4bwA+Azm04NioefAAAAAASUVORK5CYII=) 0 0 no-repeat;
+            animation:dance .5s steps(4) infinite; }
+  @keyframes dance { to { background-position:-128px 0; } }
+  .hero .stage { width:128px; height:128px; }
+  .hero b { font-size:15px; }
+  .grid { display:grid; grid-template-columns:repeat(4, minmax(140px, 1fr)); gap:10px; max-width:660px; }
+  .card { background:var(--panel); border:1px solid var(--hairline); border-radius:12px; padding:12px; }
+  .slot { height:72px; border-radius:8px; background:var(--bg); display:flex; align-items:center;
+          justify-content:center; font-family:ui-monospace,monospace; color:var(--muted);
+          font-size:18px; margin-bottom:8px; border:1px dashed var(--hairline); }
+  .card b { font-size:12px; display:block; }
+  .card small { color:var(--muted); font-size:10.5px; line-height:1.35; display:block; }
+  .tag { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.5px;
+         padding:1px 7px; border-radius:99px; color:#fff; margin-bottom:6px; }
+</style>
+</head>
+<body>
+  <h1>Launch cast — 12 species, one taste spectrum</h1>
+  <p class="sub">The Pokémon spread: cute, cool, badass, and weird, so everyone finds
+  <em>theirs</em>. Names are working titles; the spread is the requirement. Every
+  silhouette must read at 18px in the menu bar. Below: the real v0.1 placeholder
+  running its actual 4-frame dance.</p>
+
+  <div class="hero">
+    <div class="stage"><div class="sprite"></div></div>
+    <div>
+      <b>“Classic” (placeholder)</b>
+      <div style="color:var(--muted)">32×32, 4-frame dance, ×4 integer scale, nearest-neighbor.
+      This is the committed scaffold sprite — the bar every real species must beat.</div>
+    </div>
+  </div>
+
+  <h2>Cute (4)</h2>
+  <div class="grid">
+    <div class="card"><span class="tag" style="background:#e8674b">CUTE</span><div class="slot">???</div><b>Round Blob</b><small>The classic, evolved. Squishy silhouette, big eyes. The onboarding-guaranteed charmer.</small></div>
+    <div class="card"><span class="tag" style="background:#e8674b">CUTE</span><div class="slot">???</div><b>Bean Cat</b><small>Loaf-shaped. Ears carry the silhouette at 18px. Tail flick in idle.</small></div>
+    <div class="card"><span class="tag" style="background:#e8674b">CUTE</span><div class="slot">???</div><b>Dumpling Dog</b><small>Pleated top knot, stubby legs. Dance = full-body wiggle.</small></div>
+    <div class="card"><span class="tag" style="background:#e8674b">CUTE</span><div class="slot">???</div><b>Baby Ghost</b><small>Trailing hem, permanent surprised eyes. Floats 1px above ground line.</small></div>
+  </div>
+
+  <h2>Cool (3)</h2>
+  <div class="grid">
+    <div class="card"><span class="tag" style="background:#3b82d9">COOL</span><div class="slot">???</div><b>Sunglasses Frog</b><small>Never blinks (the glasses do). Dance = slow head-bob, off-beat.</small></div>
+    <div class="card"><span class="tag" style="background:#3b82d9">COOL</span><div class="slot">???</div><b>Skater Robot</b><small>One wheel, antenna bobble. Celebrate = kickflip.</small></div>
+    <div class="card"><span class="tag" style="background:#3b82d9">COOL</span><div class="slot">???</div><b>Hoodie Fox</b><small>Hood up, tail out the back. The mysterious one.</small></div>
+  </div>
+
+  <h2>Badass (3)</h2>
+  <div class="grid">
+    <div class="card"><span class="tag" style="background:#8b5cf6">BADASS</span><div class="slot">???</div><b>Tiny Dragon</b><small>Big wings on a small body. Idle = smoke puff every ~30s.</small></div>
+    <div class="card"><span class="tag" style="background:#8b5cf6">BADASS</span><div class="slot">???</div><b>Knight Beetle</b><small>Horn as visor. Dance = armor-clank stomp.</small></div>
+    <div class="card"><span class="tag" style="background:#8b5cf6">BADASS</span><div class="slot">???</div><b>Thundercloud</b><small>A scowling cumulonimbus. Celebrate = one lightning crack.</small></div>
+  </div>
+
+  <h2>Weird (2)</h2>
+  <div class="grid">
+    <div class="card"><span class="tag" style="background:#3fa35c">WEIRD</span><div class="slot">???</div><b>Traffic Cone</b><small>Sentient, apologetic. The community in-joke waiting to happen.</small></div>
+    <div class="card"><span class="tag" style="background:#3fa35c">WEIRD</span><div class="slot">???</div><b>Houseplant</b><small>Walking monstera. Leaves rustle when nudging. Photosynthesizes in Rest state.</small></div>
+  </div>
+</body>
+</html>

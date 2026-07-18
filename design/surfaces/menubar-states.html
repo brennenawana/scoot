@@ -1,0 +1,80 @@
+<!-- @dsCard group="Menu Bar" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Menu Bar States & Popover</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:640px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:22px 0 10px; }
+  .bar { display:flex; align-items:center; gap:18px; height:32px; padding:0 16px;
+         border-radius:8px; max-width:640px; }
+  .bar.light { background:linear-gradient(#fbfbfd,#f1f1f4); border:1px solid rgba(0,0,0,.1); color:#1d1d1f; }
+  .bar.dark { background:linear-gradient(#3a3a3e,#2c2c30); border:1px solid rgba(255,255,255,.08); color:#f5f5f7; margin-top:8px; }
+  .bar .clock { margin-left:auto; font-size:12px; opacity:.8; }
+  .icon { width:18px; height:18px; image-rendering:pixelated; display:block;
+          background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAADaInAlAAABXklEQVR42u2asQ3CQAxFMwYSBS0CiQXYgjVoqBmAgiGYgSEYhE2CFEhxik6xz/bZ4b4ld1z+z/dTRMBdh0KhUCgUCoUKV8fdtpc0EgQAIG6JAxk/398vombPBQA0CoAbcUZBa4NZK5+JzuuZttVcAECjALgRZxy0mR+jfLL3LdSZzQEANA5AdUHu4JUCV/ejlI81+AAAADABqPzorXXjUX0BAADgC8BE+Ff79Wpo8sVnzuUCV9Nnnjf3w8zDbQ4AAAAkwuNBrvDcOWrgpfrc89Z+uHm4zQEAAID00fO4fbv0i0bmPPmRK9UnXqeaH2IebnMAAACA9PpxPWyS1nrt4r7+SH1o+dHOo1SX6wMAAIA6fwtH/eHFy4f4J+ilLYYAgIUD8D6fhpYKj9ehBq+lG8UHVTeKPgBoHYCckdIuXYaU6kbxIV1E8dIHAK0D4L0mHmUpNMoyqtuaPgD4bwA+Azm04NioefAAAAAASUVORK5CYII=) 0 0 / 128px 32px no-repeat; }
+  .st { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .st small { font-size:9px; letter-spacing:.4px; text-transform:uppercase; opacity:.65; }
+  .nudging { animation:hop .5s steps(4) infinite; }
+  @keyframes hop { to { background-position:-128px 0; } }
+  .pretell { animation:stretch 2.4s ease-in-out infinite; }
+  @keyframes stretch { 0%,84%,100% { transform:none; } 88% { transform:scaleY(1.15) translateY(-1px); } 94% { transform:scaleY(.92); } }
+  .resting { opacity:.45; }
+  .pop { margin-top:18px; width:260px; background:var(--panel); border:1px solid var(--hairline);
+         border-radius:12px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.16); text-align:center; }
+  .pop .big { width:32px;height:32px;transform:scale(2);transform-origin:top left; margin:0 auto 14px; }
+  .pop .wrap { width:64px; height:64px; margin:0 auto; }
+  .pop .count { font-size:13px; }
+  .pop .btnrow { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+  .btn { font-size:12px; padding:4px 12px; border-radius:6px; border:1px solid var(--hairline);
+         background:var(--bg); color:var(--text); }
+  .btn.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .note { color:var(--muted); font-size:11px; margin-top:14px; max-width:640px; }
+</style>
+</head>
+<body>
+  <h1>Menu bar states</h1>
+  <p class="sub">Five states, one 18pt slot. Resting icon is a template image
+  (adapts to bar tint); color is allowed only during animation bursts. The
+  pre-tell is a single subtle stretch at T-60s — anticipation, not alarm.</p>
+
+  <div class="bar light">
+    <div class="st"><span class="icon"></span><small>calm</small></div>
+    <div class="st"><span class="icon pretell"></span><small>pre-tell</small></div>
+    <div class="st"><span class="icon nudging"></span><small>nudging</small></div>
+    <div class="st"><span class="icon" style="background-position:-32px 0"></span><small>celebrating</small></div>
+    <div class="st"><span class="icon resting"></span><small>resting</small></div>
+    <span class="clock">Fri 09:41</span>
+  </div>
+  <div class="bar dark">
+    <div class="st"><span class="icon"></span><small>calm</small></div>
+    <div class="st"><span class="icon pretell"></span><small>pre-tell</small></div>
+    <div class="st"><span class="icon nudging"></span><small>nudging</small></div>
+    <div class="st"><span class="icon" style="background-position:-32px 0"></span><small>celebrating</small></div>
+    <div class="st"><span class="icon resting"></span><small>resting</small></div>
+    <span class="clock">Fri 09:41</span>
+  </div>
+
+  <h2>Left-click popover (260pt, button-only)</h2>
+  <div class="pop">
+    <div class="wrap"><div class="icon big nudging" style="width:32px;height:32px;background-size:128px 32px"></div></div>
+    <div class="count"><b>Next nudge in 23:41</b></div>
+    <div style="color:var(--muted);font-size:11px">7 scoots today</div>
+    <div class="btnrow"><span class="btn primary">Nudge Now</span><span class="btn">Pause 1 Hour</span></div>
+    <div class="btnrow"><span class="btn">Settings…</span><span class="btn">Quit</span></div>
+  </div>
+
+  <p class="note">Right-click bypasses the popover: Nudge Now / Pause / Resume /
+  Settings… / Quit. Text entry never lives here (accessory-app keyboard-focus
+  rule) — anything typed goes to the Settings window.</p>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!-- @dsCard group="Reveal" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Roll Reveal Storyboard</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:660px; }
+  .board { display:grid; grid-template-columns:repeat(3, 210px); gap:12px; }
+  .frame { background:var(--panel); border:1px solid var(--hairline); border-radius:12px; overflow:hidden; }
+  .scene { height:130px; position:relative; display:flex; align-items:center; justify-content:center;
+           background:#141416; }
+  .cap { padding:9px 11px; }
+  .cap b { font-size:11.5px; display:block; }
+  .cap small { color:var(--muted); font-size:10.5px; line-height:1.35; display:block; }
+  .capsule { width:34px; height:44px; border-radius:17px; background:linear-gradient(#3c3c42,#26262b);
+             border:2px solid #55555e; }
+  .wiggle { animation:wig 1.2s ease-in-out infinite; }
+  @keyframes wig { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-9deg)} 75%{transform:rotate(9deg)} }
+  .burst { width:70px; height:70px; border-radius:50%;
+           background:radial-gradient(circle,#fff 0%,#ffd166 35%,transparent 70%); filter:blur(1px); }
+  .sprite { width:32px; height:32px; transform:scale(3); transform-origin:center; image-rendering:pixelated;
+            background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAADaInAlAAABXklEQVR42u2asQ3CQAxFMwYSBS0CiQXYgjVoqBmAgiGYgSEYhE2CFEhxik6xz/bZ4b4ld1z+z/dTRMBdh0KhUCgUCoUKV8fdtpc0EgQAIG6JAxk/398vombPBQA0CoAbcUZBa4NZK5+JzuuZttVcAECjALgRZxy0mR+jfLL3LdSZzQEANA5AdUHu4JUCV/ejlI81+AAAADABqPzorXXjUX0BAADgC8BE+Ff79Wpo8sVnzuUCV9Nnnjf3w8zDbQ4AAAAkwuNBrvDcOWrgpfrc89Z+uHm4zQEAAID00fO4fbv0i0bmPPmRK9UnXqeaH2IebnMAAACA9PpxPWyS1nrt4r7+SH1o+dHOo1SX6wMAAIA6fwtH/eHFy4f4J+ilLYYAgIUD8D6fhpYKj9ehBq+lG8UHVTeKPgBoHYCckdIuXYaU6kbxIV1E8dIHAK0D4L0mHmUpNMoyqtuaPgD4bwA+Azm04NioefAAAAAASUVORK5CYII=) 0 0 no-repeat; }
+  .aura { position:absolute; inset:0; background:radial-gradient(circle,#5aa2f055,transparent 65%); }
+  .plate { position:absolute; bottom:10px; left:0; right:0; text-align:center; }
+  .plate b { font-family:ui-monospace,monospace; font-size:11px; color:#fff; letter-spacing:1px; }
+  .badge { font-size:9px; font-weight:700; padding:1px 8px; border-radius:99px; color:#fff;
+           background:#3b82d9; margin-left:6px; }
+  .confetti i { position:absolute; width:5px; height:8px; }
+  .naming { width:150px; background:#232327; border:1px solid #3a3a40; border-radius:7px;
+            color:#aeb0b6; font-size:11px; padding:5px 9px; text-align:left; }
+  .rules { color:var(--muted); font-size:11.5px; margin-top:16px; max-width:660px; }
+  .rules b { color:var(--text); }
+</style>
+</head>
+<body>
+  <h1>The reveal — pack-opening, six beats</h1>
+  <p class="sub">The shareable spike. Total ~4–8s (drama length is experiment E4).
+  The capsule's wiggle duration scales with rarity — connoisseurs learn the tell,
+  exactly like holo-foil pack texture. Skippable after first viewing, replayable
+  forever from the Scootdex.</p>
+
+  <div class="board">
+    <div class="frame"><div class="scene"><div class="capsule"></div></div>
+      <div class="cap"><b>1 · Dim</b><small>Chrome fades to the stage. One focal point, nothing else.</small></div></div>
+    <div class="frame"><div class="scene"><div class="capsule wiggle"></div></div>
+      <div class="cap"><b>2 · Wiggle</b><small>0.8s Common → 2.5s Secret. The anticipation dial.</small></div></div>
+    <div class="frame"><div class="scene"><div class="burst"></div></div>
+      <div class="cap"><b>3 · Burst</b><small>White-gold flash, 300ms. Sound: soft pop + sparkle.</small></div></div>
+    <div class="frame"><div class="scene"><div class="aura"></div><div class="sprite"></div>
+        <div class="plate"><b>SUNGLASSES FROG</b><span class="badge">RARE</span></div></div>
+      <div class="cap"><b>4 · Meet</b><small>Buddy lands + name plate + rarity aura/badge. Pixel world inside native chrome.</small></div></div>
+    <div class="frame"><div class="scene"><div class="confetti">
+          <i style="left:30px;top:20px;background:#ff8a70;transform:rotate(20deg)"></i>
+          <i style="left:80px;top:40px;background:#ffd166;transform:rotate(-15deg)"></i>
+          <i style="left:150px;top:15px;background:#58c776;transform:rotate(40deg)"></i>
+          <i style="left:120px;top:70px;background:#5aa2f0;transform:rotate(-30deg)"></i>
+          <i style="left:50px;top:80px;background:#a47cff;transform:rotate(10deg)"></i></div>
+        <div class="sprite"></div></div>
+      <div class="cap"><b>5 · Celebrate</b><small>Confetti density scales with rarity. Epic+ ends with the share button softly spotlit — the one sanctioned share nudge.</small></div></div>
+    <div class="frame"><div class="scene"><div class="naming">Name your buddy…&nbsp;&nbsp;<span style="opacity:.5">Croaksworth</span></div></div>
+      <div class="cap"><b>6 · Name</b><small>Prefilled suggestion, fully editable. Naming = attachment metric #1.</small></div></div>
+  </div>
+
+  <p class="rules"><b>Rules:</b> no countdown pressure on unredeemed rolls, ever
+  ("Your roll is ready — whenever you are"). Duplicates resolve into sparks on
+  beat 4 with their own smaller moment — never a dead pull. Odds are one tap away
+  from every reveal.</p>
+</body>
+</html>

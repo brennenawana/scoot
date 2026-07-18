@@ -1,0 +1,86 @@
+<!-- @dsCard group="Foundations" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Design Tokens</title>
+<style>
+  :root {
+    --bg: #f5f5f7; --panel: #ffffff; --text: #1d1d1f; --muted: #6e6e73;
+    --accent: #e8674b; --hairline: rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1e1e20; --panel: #2a2a2c; --text: #f5f5f7; --muted: #98989d;
+            --hairline: rgba(255,255,255,.1); --accent: #ff8a70; }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); padding: 28px;
+         font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size: 20px; font-weight: 700; letter-spacing: -.2px; }
+  .sub { color: var(--muted); margin: 4px 0 24px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px;
+       color: var(--muted); margin: 26px 0 10px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { background: var(--panel); border: 1px solid var(--hairline); border-radius: 10px;
+          padding: 10px; width: 128px; }
+  .swatch { height: 44px; border-radius: 7px; margin-bottom: 8px; border: 1px solid var(--hairline); }
+  .chip b { display: block; font-size: 12px; }
+  .chip code { font-size: 10px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .aura { height: 44px; border-radius: 7px; margin-bottom: 8px; display: flex;
+          align-items: center; justify-content: center; }
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: #fff; }
+  .type div { padding: 4px 0; border-bottom: 1px dashed var(--hairline); }
+  .spacing { display: flex; gap: 8px; align-items: flex-end; }
+  .spacing i { display: block; background: var(--accent); opacity: .85; border-radius: 3px; width: 26px; }
+  .spacing span { font-size: 10px; color: var(--muted); display: block; text-align: center; margin-top: 4px; }
+  .pixel-note { background: var(--panel); border: 1px solid var(--hairline); border-radius: 10px;
+                padding: 12px 14px; margin-top: 10px; color: var(--muted); max-width: 620px; }
+</style>
+</head>
+<body>
+  <h1>Scoot design tokens</h1>
+  <p class="sub">Two layers, never blurred: app chrome is pure macOS; the buddy world is crisp pixels. This sheet renders in your OS light/dark automatically.</p>
+
+  <h2>Chrome</h2>
+  <div class="row">
+    <div class="chip"><div class="swatch" style="background:var(--bg)"></div><b>Background</b><code>#F5F5F7 / #1E1E20</code></div>
+    <div class="chip"><div class="swatch" style="background:var(--panel)"></div><b>Panel</b><code>#FFFFFF / #2A2A2C</code></div>
+    <div class="chip"><div class="swatch" style="background:var(--text)"></div><b>Text</b><code>#1D1D1F / #F5F5F7</code></div>
+    <div class="chip"><div class="swatch" style="background:var(--muted)"></div><b>Secondary</b><code>#6E6E73 / #98989D</code></div>
+    <div class="chip"><div class="swatch" style="background:var(--accent)"></div><b>Accent (coral)</b><code>#E8674B / #FF8A70</code></div>
+  </div>
+
+  <h2>Rarity language — aura + badge (always paired with text)</h2>
+  <div class="row">
+    <div class="chip"><div class="aura" style="background:radial-gradient(circle,#c9b29b44,transparent 70%)"><span class="badge" style="background:#b59f8c">COMMON</span></div><b>Common</b><code>#B59F8C · 60/100</code></div>
+    <div class="chip"><div class="aura" style="background:radial-gradient(circle,#58c77644,transparent 70%)"><span class="badge" style="background:#3fa35c">UNCOMMON</span></div><b>Uncommon</b><code>#3FA35C · 25/100</code></div>
+    <div class="chip"><div class="aura" style="background:radial-gradient(circle,#5aa2f044,transparent 70%)"><span class="badge" style="background:#3b82d9">RARE</span></div><b>Rare</b><code>#3B82D9 · 10/100</code></div>
+    <div class="chip"><div class="aura" style="background:radial-gradient(circle,#a47cff55,transparent 70%)"><span class="badge" style="background:#8b5cf6">EPIC</span></div><b>Epic</b><code>#8B5CF6 · 4/100</code></div>
+    <div class="chip"><div class="aura" style="background:conic-gradient(from 0deg,#ff8a70,#ffd166,#58c776,#5aa2f0,#a47cff,#ff8a70); filter:saturate(.85)"><span class="badge" style="background:#1d1d1f">SECRET</span></div><b>Secret</b><code>iridescent · 1/100</code></div>
+  </div>
+
+  <h2>Type ramp</h2>
+  <div class="type" style="max-width:620px">
+    <div style="font-size:20px;font-weight:700">Window title — SF Pro 20/700</div>
+    <div style="font-size:13px">Body — SF Pro 13/400 (native control size)</div>
+    <div style="font-size:11px;color:var(--muted)">Caption — SF Pro 11/400 secondary</div>
+    <div style="font-family:ui-monospace,monospace;font-size:12px;letter-spacing:1px">PIXEL DISPLAY FONT — buddy-world surfaces only (name plates, rarity tags)</div>
+  </div>
+
+  <h2>Spacing (compact 320pt popover scale)</h2>
+  <div class="spacing">
+    <div><i style="height:4px"></i><span>4</span></div>
+    <div><i style="height:8px"></i><span>8</span></div>
+    <div><i style="height:12px"></i><span>12</span></div>
+    <div><i style="height:16px"></i><span>16</span></div>
+    <div><i style="height:24px"></i><span>24</span></div>
+  </div>
+
+  <div class="pixel-note">
+    <b>Pixel rules (constitutional):</b> sprites author at 16/32px, render at integer
+    scales only, nearest-neighbor always. Rarity never adds sprite complexity —
+    it lives in the aura, frame, and badge. Every rarity color is paired with its
+    name in text (colorblind-safe by construction).
+  </div>
+</body>
+</html>

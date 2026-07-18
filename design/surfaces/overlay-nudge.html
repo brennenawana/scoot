@@ -1,0 +1,73 @@
+<!-- @dsCard group="Nudge" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — Buddy Drop-in Overlay</title>
+<style>
+  :root { --text:#1d1d1f; --muted:#6e6e73; }
+  @media (prefers-color-scheme: dark) { :root { --text:#f5f5f7; --muted:#98989d; } }
+  * { box-sizing:border-box; margin:0; }
+  body { padding:28px; color:var(--text);
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:640px; }
+  .desktop { position:relative; width:640px; height:360px; border-radius:12px; overflow:hidden;
+             background:linear-gradient(135deg,#7bb8d9 0%,#a58fc7 55%,#e8938f 100%); }
+  .desktop.dark { background:linear-gradient(135deg,#20344a 0%,#3a2f57 55%,#5e3341 100%); margin-top:14px; }
+  .menubar { height:24px; background:rgba(255,255,255,.55); backdrop-filter:blur(6px);
+             display:flex; align-items:center; padding:0 10px; font-size:11px; color:#1d1d1f; gap:12px; }
+  .dark .menubar { background:rgba(20,20,22,.55); color:#f5f5f7; }
+  .window { position:absolute; top:52px; left:38px; width:340px; height:230px; border-radius:10px;
+            background:rgba(255,255,255,.92); box-shadow:0 18px 40px rgba(0,0,0,.25); }
+  .dark .window { background:rgba(44,44,48,.92); }
+  .titlebar { height:26px; border-bottom:1px solid rgba(0,0,0,.08); display:flex; align-items:center; padding:0 9px; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:50%; }
+  /* The overlay panel: buddy-sized, corner-anchored, geometry IS the click-through */
+  .overlay { position:absolute; right:24px; bottom:24px; width:160px; text-align:center; }
+  .bubble { display:inline-block; font-size:12px; font-weight:600; padding:5px 11px;
+            border-radius:99px; background:rgba(255,255,255,.86); color:#1d1d1f;
+            backdrop-filter:blur(8px); margin-bottom:8px; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  .dark .bubble { background:rgba(40,40,44,.86); color:#f5f5f7; }
+  .stage { width:128px; height:128px; margin:0 auto; }
+  .sprite { width:32px; height:32px; transform:scale(4); transform-origin:top left; image-rendering:pixelated;
+            background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAADaInAlAAABXklEQVR42u2asQ3CQAxFMwYSBS0CiQXYgjVoqBmAgiGYgSEYhE2CFEhxik6xz/bZ4b4ld1z+z/dTRMBdh0KhUCgUCoUKV8fdtpc0EgQAIG6JAxk/398vombPBQA0CoAbcUZBa4NZK5+JzuuZttVcAECjALgRZxy0mR+jfLL3LdSZzQEANA5AdUHu4JUCV/ejlI81+AAAADABqPzorXXjUX0BAADgC8BE+Ff79Wpo8sVnzuUCV9Nnnjf3w8zDbQ4AAAAkwuNBrvDcOWrgpfrc89Z+uHm4zQEAAID00fO4fbv0i0bmPPmRK9UnXqeaH2IebnMAAACA9PpxPWyS1nrt4r7+SH1o+dHOo1SX6wMAAIA6fwtH/eHFy4f4J+ilLYYAgIUD8D6fhpYKj9ehBq+lG8UHVTeKPgBoHYCckdIuXYaU6kbxIV1E8dIHAK0D4L0mHmUpNMoyqtuaPgD4bwA+Azm04NioefAAAAAASUVORK5CYII=) 0 0 no-repeat;
+            animation:dance .5s steps(4) infinite; }
+  @keyframes dance { to { background-position:-128px 0; } }
+  .specs { color:var(--muted); font-size:11.5px; margin-top:16px; max-width:640px; }
+  .specs b { color:var(--text); }
+</style>
+</head>
+<body>
+  <h1>The hero nudge — buddy drop-in</h1>
+  <p class="sub">A borderless, non-activating panel in the user's chosen corner of
+  the screen the mouse is on. The buddy dances; a click credits the scoot without
+  stealing keyboard focus; walking away for 2 minutes credits it automatically.</p>
+
+  <div class="desktop">
+    <div class="menubar"><b></b><span>Finder</span><span>File</span><span>Edit</span></div>
+    <div class="window"><div class="titlebar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span></div></div>
+    <div class="overlay">
+      <div class="bubble">Time to scoot.</div>
+      <div class="stage"><div class="sprite"></div></div>
+    </div>
+  </div>
+
+  <div class="desktop dark">
+    <div class="menubar"><b></b><span>Finder</span><span>File</span><span>Edit</span></div>
+    <div class="window"><div class="titlebar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span></div></div>
+    <div class="overlay">
+      <div class="bubble">Time to scoot.</div>
+      <div class="stage"><div class="sprite"></div></div>
+    </div>
+  </div>
+
+  <p class="specs">
+    <b>Panel spec:</b> ~160×180pt, 24pt corner margin, integral origin (pixel
+    crispness), window level above full-screen apps, follows Spaces, never
+    becomes key. <b>Sizes:</b> ×2 (64) / ×3 (96) / ×4 (128) integer scales only.
+    <b>Duration:</b> dance ≤12s, then wave-and-leave; polite, never modal.
+    <b>Ignoring it costs nothing</b> — no sad state, constitutionally.
+  </p>
+</body>
+</html>
