@@ -51,6 +51,16 @@ final class CollectionFeature: NSObject, ScootFeature {
         manager.credit(outcome: outcome)
     }
 
+    func popoverPortrait() -> AnyView? {
+        guard let species = manager.activeSpecies,
+              let sheet = SpriteLibrary.sheet(for: species) else { return nil }
+        return AnyView(PortraitFlourishView(
+            sheet: sheet,
+            celebrateSheet: SpriteLibrary.celebrateSheet(for: species),
+            bondScoots: manager.state.activeBuddy?.bondScoots ?? 0
+        ))
+    }
+
     func popoverAccessory() -> AnyView? {
         AnyView(CollectionPopoverSection(manager: manager,
                                          onRoll: { [weak self] in self?.startReveal() }))
@@ -68,6 +78,10 @@ final class CollectionFeature: NSObject, ScootFeature {
 
     func activeSpriteSheet() -> SpriteSheet? {
         manager.activeSpecies.flatMap { SpriteLibrary.sheet(for: $0) }
+    }
+
+    func activeCelebrateSheet() -> SpriteSheet? {
+        manager.activeSpecies.flatMap { SpriteLibrary.celebrateSheet(for: $0) }
     }
 
     func statusIcons() -> StatusIconSet? {

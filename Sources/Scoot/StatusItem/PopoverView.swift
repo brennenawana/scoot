@@ -9,6 +9,8 @@ struct PopoverView: View {
     @ObservedObject var scheduler: NudgeScheduler
     /// Feature-supplied performer; nil falls back to the classic placeholder.
     var portrait: SpriteSheet? = nil
+    /// Feature-supplied portrait view (bond flourishes); wins over `portrait`.
+    var portraitOverride: AnyView? = nil
     /// Feature-supplied section between the status line and the verbs
     /// (v0.2: the roll meter / ticket panel).
     var accessory: AnyView? = nil
@@ -22,7 +24,9 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            if let sheet = portrait ?? SpriteSheetLoader.classic {
+            if let portraitOverride {
+                portraitOverride
+            } else if let sheet = portrait ?? SpriteSheetLoader.classic {
                 BuddyView(sheet: sheet, fps: 4, scale: 2)
             }
 

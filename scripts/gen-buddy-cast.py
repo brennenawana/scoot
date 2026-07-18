@@ -693,6 +693,67 @@ def fps_for(style):
     return 10.0 if style == "bounce" else 6.0
 
 
+def top_margin(grid):
+    for index, row in enumerate(grid):
+        if any(ch != "." for ch in row):
+            return index
+    return len(grid)
+
+
+def celebrate_frames(species):
+    """The credited-scoot moment: a 4-frame hop (or bob/wiggle where the art
+    demands), padded like the dance. Loops at 10 fps for a bounded linger."""
+    idle = pad_h(species["idle"], APRON)
+    style = species["style"]
+    if style in ("float", "storm"):
+        return [idle, shift_y(idle, -1), shift_y(idle, -2), shift_y(idle, -1)]
+    rise = min(2, top_margin(species["idle"]))
+    if rise == 0:
+        # Art touches the canvas top (robot antenna, beetle horn): an excited
+        # wiggle instead of a hop.
+        return [vsquash(idle), shear(idle, "left"), shear(idle, "right"), idle]
+    return [vsquash(idle), shift_y(idle, -rise), shift_y(idle, -max(1, rise - 1)), idle]
+
+
+def write_reveal_pop(path):
+    """The burst beat's sound: a soft pop (fast-decaying filtered thump) plus
+    a tiny rising sparkle arpeggio. Gentle by design — the reveal is loud
+    visually, not acoustically."""
+    import math
+    import struct as _struct
+    import wave
+
+    rate = 44100
+    total = int(rate * 0.55)
+    mix = [0.0] * total
+
+    # Pop: a 60ms sine thump sliding down 220->110 Hz.
+    for i in range(int(rate * 0.06)):
+        t = i / rate
+        freq = 220 - 1800 * t
+        env = math.exp(-55 * t)
+        mix[i] += 0.5 * env * math.sin(2 * math.pi * freq * t)
+
+    # Sparkle: three quick ascending notes (E6, A6, C#7), 70ms apart.
+    for n, freq in enumerate([1318.5, 1760.0, 2217.5]):
+        start = int(rate * (0.10 + 0.07 * n))
+        for i in range(int(rate * 0.22)):
+            t = i / rate
+            env = min(t / 0.008, 1.0) * math.exp(-16 * t)
+            if start + i < total:
+                mix[start + i] += 0.16 * env * math.sin(2 * math.pi * freq * t)
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(b"".join(
+            _struct.pack("<h", max(-32767, min(32767, int(s * 32767)))) for s in mix
+        ))
+    print(f"  wrote {path.relative_to(REPO)}  ({total / rate:.2f}s)")
+
+
 def menubar_atlas(species, scale):
     """5-frame 18px strip for the status item: frame 0 is the template
     silhouette (the resting icon), frames 1-4 the colored bounce with baked
@@ -747,14 +808,31 @@ def main():
         mpath.write_text(json.dumps(manifest, indent=2) + "\n")
         print(f"  wrote {mpath.relative_to(REPO)}")
 
+        cele = celebrate_frames(species)
+        write_png(SPRITES / f"{name}-celebrate.png",
+                  hstack([grid_to_pixels(g, pal, scale=2) for g in cele]), repo_root=REPO)
+        cpath = SPRITES / f"{name}-celebrate.json"
+        cpath.write_text(json.dumps({
+            "name": f"{name}-celebrate",
+            "frameWidth": (16 + 2 * APRON) * 2,
+            "frameHeight": 32,
+            "frameCount": len(cele),
+            "fps": 10.0,
+        }, indent=2) + "\n")
+        print(f"  wrote {cpath.relative_to(REPO)}")
+
         for scale, suffix in ((1, ""), (2, "@2x")):
             write_png(MENUBAR / f"{name}-menubar{suffix}.png",
                       menubar_atlas(species, scale), repo_root=REPO)
 
         preview_rows.append(hstack(
-            [grid_to_pixels(g, pal, scale=8) for g in [pad_h(species["idle"], APRON)] + frames]
+            [grid_to_pixels(g, pal, scale=8)
+             for g in [pad_h(species["idle"], APRON)] + frames + cele]
         ))
         mb_preview.append(menubar_atlas(species, 4))
+
+    print("Sound:")
+    write_reveal_pop(REPO / "Sources" / "Scoot" / "Resources" / "Sounds" / "reveal-pop.wav")
 
     print("Previews:")
     write_png(REPO / "docs" / "assets" / "cast-preview.png",

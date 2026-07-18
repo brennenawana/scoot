@@ -153,7 +153,9 @@ struct ScootdexView: View {
                 RadialGradient(colors: [species.rarity.color.opacity(0.18), .clear],
                                center: .center, startRadius: 5, endRadius: 70)
                 if let sheet = SpriteLibrary.sheet(for: species) {
-                    BuddyView(sheet: sheet, fps: 6, scale: 2)
+                    PortraitFlourishView(sheet: sheet,
+                                         celebrateSheet: SpriteLibrary.celebrateSheet(for: species),
+                                         bondScoots: owned?.bondScoots ?? 0)
                 }
             }
             .frame(width: 130, height: 96)

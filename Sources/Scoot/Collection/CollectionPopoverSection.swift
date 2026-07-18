@@ -64,9 +64,23 @@ struct CollectionPopoverSection: View {
             Text(meterLine)
                 .font(.system(size: 10.5))
                 .foregroundStyle(.secondary)
+            if let cooldownLine {
+                Text(cooldownLine)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(meterLine)
+        .accessibilityLabel(meterLine + (cooldownLine.map { ". \($0)" } ?? ""))
+    }
+
+    /// Shown only after a click was rate-limited, while the cooldown lasts —
+    /// otherwise a capped click reads as a broken meter. Factual, not guilty.
+    private var cooldownLine: String? {
+        guard manager.lastCreditSuppressedAt != nil,
+              let remaining = manager.manualCreditCooldown else { return nil }
+        let minutes = max(1, Int((remaining / 60).rounded(.up)))
+        return "Clicks count once per 10 min — next in \(minutes)m"
     }
 
     private var meterLine: String {

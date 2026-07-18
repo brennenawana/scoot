@@ -47,8 +47,13 @@ final class AppCoordinator {
         )
         self.statusController = statusController
 
-        dispatcher.register(BuddyOverlayNudge(settings: settings,
-                                              spriteProvider: { [weak self] in self?.activeSheet() }))
+        dispatcher.register(BuddyOverlayNudge(
+            settings: settings,
+            spriteProvider: { [weak self] in self?.activeSheet() },
+            celebrateProvider: { [weak self] in
+                self?.features.lazy.compactMap { $0.activeCelebrateSheet() }.first
+            }
+        ))
         dispatcher.register(SoundNudge())
         dispatcher.register(IconBounceNudge(animator: statusController.animator))
         dispatcher.prepareAll()
@@ -105,6 +110,7 @@ final class AppCoordinator {
         NSHostingController(rootView: PopoverView(
             scheduler: scheduler,
             portrait: activeSheet(),
+            portraitOverride: features.lazy.compactMap { $0.popoverPortrait() }.first,
             accessory: features.lazy.compactMap { $0.popoverAccessory() }.first,
             footerAccessory: features.lazy.compactMap { $0.popoverFooterAccessory() }.first,
             onNudgeNow: { [weak self] in self?.scheduler.requestNudgeNow() },

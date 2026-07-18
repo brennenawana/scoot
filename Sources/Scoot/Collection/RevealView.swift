@@ -1,4 +1,5 @@
 #if canImport(AppKit)
+import AppKit
 import SwiftUI
 import ScootCore
 
@@ -29,6 +30,12 @@ struct RevealView: View {
         if case .duplicate = result { return true }
         return false
     }
+
+    /// Soft pop + sparkle for the burst beat — the reveal is loud visually,
+    /// not acoustically (design/surfaces/reveal-flow).
+    private static let burstSound: NSSound? = Bundle.module
+        .url(forResource: "reveal-pop", withExtension: "wav", subdirectory: "Sounds")
+        .flatMap { NSSound(contentsOf: $0, byReference: true) }
 
     var body: some View {
         ZStack {
@@ -84,6 +91,10 @@ struct RevealView: View {
             .frame(width: 110, height: 110)
             .transition(.scale(scale: 0.2).combined(with: .opacity))
             .task {
+                if let sound = Self.burstSound {
+                    if sound.isPlaying { sound.stop() }
+                    sound.play()
+                }
                 try? await Task.sleep(nanoseconds: 300_000_000)
                 advance(to: .meet)
             }

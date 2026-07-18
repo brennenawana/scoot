@@ -8,13 +8,28 @@ import ScootCore
 /// separate assets that could drift.
 enum SpriteLibrary {
     private static var sheets: [String: SpriteSheet] = [:]
+    private static var missing: Set<String> = []
     private static var silhouettes: [String: NSImage] = [:]
 
-    static func sheet(for species: Buddy) -> SpriteSheet? {
-        if let cached = sheets[species.spriteSheet] { return cached }
-        guard let loaded = SpriteSheetLoader.load(named: species.spriteSheet) else { return nil }
-        sheets[species.spriteSheet] = loaded
+    private static func sheet(named name: String) -> SpriteSheet? {
+        if let cached = sheets[name] { return cached }
+        guard !missing.contains(name) else { return nil }
+        guard let loaded = SpriteSheetLoader.load(named: name) else {
+            missing.insert(name)
+            return nil
+        }
+        sheets[name] = loaded
         return loaded
+    }
+
+    static func sheet(for species: Buddy) -> SpriteSheet? {
+        sheet(named: species.spriteSheet)
+    }
+
+    /// The credited-scoot hop. Nil for species without one (callers fall back
+    /// to the dance sheet at a livelier fps).
+    static func celebrateSheet(for species: Buddy) -> SpriteSheet? {
+        sheet(named: "\(species.spriteSheet)-celebrate")
     }
 
     /// The species' resting pose: last frame for grounded bounce strips

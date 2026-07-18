@@ -28,6 +28,9 @@ protocol ScootFeature: AnyObject {
     /// input (movementDetected/acknowledged credit scoots in v0.2).
     func handlePrimaryOutcome(_ outcome: NudgeOutcome)
 
+    /// Replacement for the popover's buddy portrait (v0.2: bond-scaled idle
+    /// flourishes). Nil keeps the stock portrait.
+    func popoverPortrait() -> AnyView?
     /// Section injected into the popover between the status line and verbs.
     func popoverAccessory() -> AnyView?
     /// Leading control(s) for the popover footer row.
@@ -36,6 +39,9 @@ protocol ScootFeature: AnyObject {
     func quickMenuItems() -> [NSMenuItem]
     /// Sprite sheet the overlay + popover portrait perform with.
     func activeSpriteSheet() -> SpriteSheet?
+    /// Celebration sheet for the credited-scoot moment (nil: overlay reuses
+    /// the dance sheet at a livelier fps).
+    func activeCelebrateSheet() -> SpriteSheet?
     /// Menu bar icon override derived from the active buddy.
     func statusIcons() -> StatusIconSet?
 }
@@ -44,10 +50,12 @@ extension ScootFeature {
     func start() {}
     func shutdown() {}
     func handlePrimaryOutcome(_ outcome: NudgeOutcome) {}
+    func popoverPortrait() -> AnyView? { nil }
     func popoverAccessory() -> AnyView? { nil }
     func popoverFooterAccessory() -> AnyView? { nil }
     func quickMenuItems() -> [NSMenuItem] { [] }
     func activeSpriteSheet() -> SpriteSheet? { nil }
+    func activeCelebrateSheet() -> SpriteSheet? { nil }
     func statusIcons() -> StatusIconSet? { nil }
 }
 #endif

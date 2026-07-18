@@ -21,6 +21,16 @@ final class CollectionManager: ObservableObject {
     /// guards against accidental double-earning, not adversaries.
     private var lastManualCredit: Date?
     private let manualCreditInterval: TimeInterval = 600
+    /// Set when a manual credit was rate-limited, so the popover can say why
+    /// the meter didn't move — a silent cap reads as a broken meter.
+    @Published private(set) var lastCreditSuppressedAt: Date?
+
+    /// Seconds until a buddy click counts again; nil when clicks count now.
+    var manualCreditCooldown: TimeInterval? {
+        guard let last = lastManualCredit else { return nil }
+        let remaining = manualCreditInterval - Date().timeIntervalSince(last)
+        return remaining > 0 ? remaining : nil
+    }
 
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -87,11 +97,13 @@ final class CollectionManager: ObservableObject {
             break
         case .acknowledged:
             if let last = lastManualCredit, Date().timeIntervalSince(last) < manualCreditInterval {
+                lastCreditSuppressedAt = Date()
                 telemetry.log(TelemetryEvent(name: "scoot_credit_suppressed",
                                              properties: ["reason": "manual-rate-limit"]))
                 return nil
             }
             lastManualCredit = Date()
+            lastCreditSuppressedAt = nil
         case .timedOut, .cancelled, .completed:
             return nil
         }

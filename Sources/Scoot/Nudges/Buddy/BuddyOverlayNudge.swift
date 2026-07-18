@@ -19,16 +19,21 @@ final class BuddyOverlayNudge: NudgeStyle {
     /// Who performs. The default is the v0.1 classic; a feature can inject
     /// the active collectible (the buddy you pulled is the buddy that nudges).
     private let spriteProvider: () -> SpriteSheet?
+    /// The credited-scoot hop; nil falls back to the dance sheet, livelier.
+    private let celebrateProvider: () -> SpriteSheet?
     private var panel: OverlayPanel?
     private var completion: ((NudgeOutcome) -> Void)?
     private var watchTimer: Timer?
     private var timeoutTimer: Timer?
+    private var lingerTimer: Timer?
     private var maxIdleSeen: TimeInterval = 0
 
     init(settings: SettingsStore,
-         spriteProvider: @escaping () -> SpriteSheet? = { SpriteSheetLoader.classic }) {
+         spriteProvider: @escaping () -> SpriteSheet? = { SpriteSheetLoader.classic },
+         celebrateProvider: @escaping () -> SpriteSheet? = { nil }) {
         self.settings = settings
         self.spriteProvider = spriteProvider
+        self.celebrateProvider = celebrateProvider
     }
 
     func prepare() {
@@ -52,7 +57,7 @@ final class BuddyOverlayNudge: NudgeStyle {
             fps: fps,
             scale: settings.buddyScale,
             message: "Time to scoot.",
-            onTap: { [weak self] in self?.dismiss(outcome: .acknowledged) }
+            onTap: { [weak self] in self?.finish(outcome: .acknowledged) }
         )
         // Panel hugs the content's fitting size (rounded up to even points so
         // centered children land on integral offsets) — a fixed oversized panel
@@ -77,7 +82,7 @@ final class BuddyOverlayNudge: NudgeStyle {
 
         let timeout = Timer.scheduledTimer(withTimeInterval: settings.overlayTimeout,
                                            repeats: false) { [weak self] _ in
-            self?.dismiss(outcome: .timedOut)
+            self?.finish(outcome: .timedOut)
         }
         RunLoop.main.add(timeout, forMode: .common)
         timeoutTimer = timeout
@@ -96,8 +101,63 @@ final class BuddyOverlayNudge: NudgeStyle {
         let idle = IdleMonitor.currentIdleSeconds()
         maxIdleSeen = max(maxIdleSeen, idle)
         if maxIdleSeen >= movementIdleSeconds && idle < 15 {
-            dismiss(outcome: .movementDetected)
+            finish(outcome: .movementDetected)
         }
+    }
+
+    /// Completes the nudge (credit fires immediately) and gives the moment
+    /// its beat before the panel leaves: a celebration hop for a credited
+    /// scoot ("the buddy is mid-celebration when you get back" —
+    /// docs/PRODUCT.md §1), a brief slow sway goodbye for a timeout.
+    private func finish(outcome: NudgeOutcome) {
+        watchTimer?.invalidate()
+        watchTimer = nil
+        timeoutTimer?.invalidate()
+        timeoutTimer = nil
+        let completion = self.completion
+        self.completion = nil
+        completion?(outcome)
+
+        guard let panel, let sheet = spriteProvider() ?? SpriteSheetLoader.classic else {
+            dismiss(outcome: .cancelled)
+            return
+        }
+        let linger: (view: BuddyView, seconds: TimeInterval)
+        switch outcome {
+        case .acknowledged:
+            linger = (BuddyView(sheet: celebrateProvider() ?? sheet,
+                                fps: celebrateProvider() == nil ? 12 : nil,
+                                scale: settings.buddyScale,
+                                message: "Nice scoot."), 1.4)
+        case .movementDetected:
+            linger = (BuddyView(sheet: celebrateProvider() ?? sheet,
+                                fps: celebrateProvider() == nil ? 12 : nil,
+                                scale: settings.buddyScale,
+                                message: "Saw you step away. +1 scoot."), 2.2)
+        default:
+            linger = (BuddyView(sheet: sheet, fps: 2, scale: settings.buddyScale), 1.2)
+        }
+        let hosting = NSHostingView(rootView: linger.view)
+        let fitting = hosting.fittingSize
+        let size = NSSize(width: ceil(fitting.width / 2) * 2,
+                          height: ceil(fitting.height / 2) * 2)
+        hosting.frame = NSRect(origin: .zero, size: size)
+        // Keep the buddy's feet where they were: grow/shrink around the same
+        // bottom-anchored origin so the swap doesn't teleport the character.
+        let oldFrame = panel.frame
+        panel.contentView = hosting
+        panel.setFrame(NSRect(x: oldFrame.midX - size.width / 2,
+                              y: oldFrame.minY,
+                              width: size.width,
+                              height: size.height).integral,
+                       display: true)
+
+        let timer = Timer.scheduledTimer(withTimeInterval: linger.seconds,
+                                         repeats: false) { [weak self] _ in
+            self?.dismiss(outcome: .cancelled) // completion already delivered
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        lingerTimer = timer
     }
 
     /// Corner placement on the screen holding the mouse (the best available
@@ -136,6 +196,8 @@ final class BuddyOverlayNudge: NudgeStyle {
         watchTimer = nil
         timeoutTimer?.invalidate()
         timeoutTimer = nil
+        lingerTimer?.invalidate()
+        lingerTimer = nil
         panel?.orderOut(nil)
         panel = nil
         maxIdleSeen = 0

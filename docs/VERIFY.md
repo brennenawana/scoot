@@ -154,6 +154,22 @@ buddy and dex cells answer `AXPress`. SwiftUI text fields need real keystrokes
 - [ ] Duplicate roll → "+N ✦ sparks" beat (10/20/40/80/160 by rarity), sparks
       balance updates live, ticket still spent, `owned` unchanged
 
+**Buddy depth (the moment has a beat):**
+- [ ] Clicking the dancing buddy: credit fires instantly, then the buddy does
+      its celebration hop with "Nice scoot." for ~1.4s before leaving (robot
+      and beetle wiggle instead — no headroom over the antenna/horn)
+- [ ] Auto-credit return: the buddy is mid-celebration with "Saw you step
+      away. +1 scoot." when you get back
+- [ ] Ignored nudge: at timeout the buddy slows to a gentle sway for a beat,
+      then leaves — no sad state
+- [ ] A rate-limited click shows a quiet caption under the popover meter
+      ("Clicks count once per 10 min — next in Xm") instead of silently
+      doing nothing; it disappears once clicks count again
+- [ ] Bond flourishes: with bond ≥10, the popover/dex portrait occasionally
+      breaks its idle sway with a celebration hop; noticeably more often at
+      ≥50 and ≥200 (behavior, never numbers — docs/PRODUCT.md §2)
+- [ ] The reveal's burst beat plays a soft pop + sparkle (skipping skips it)
+
 **Sprites & menu bar art:**
 - [ ] Dance frames carry a 2px transparent apron (40×32 shipped frames) so
       the lean beats never clip art at the edge — watch a full-width species
