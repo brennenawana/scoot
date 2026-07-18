@@ -52,4 +52,9 @@ iconutil -c icns Support/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icn
 # rpath so Sparkle can drop into Contents/Frameworks in v0.2 without build changes.
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Scoot" 2>/dev/null || true
 
+# install_name_tool invalidates the linker's ad-hoc signature, and Apple Silicon
+# SIGKILLs unsigned code — re-sign ad-hoc so the assembled app runs locally.
+# Release builds get their real Developer ID signature from scripts/sign.sh.
+codesign --force --sign - "$APP"
+
 echo "==> assembled $APP"
