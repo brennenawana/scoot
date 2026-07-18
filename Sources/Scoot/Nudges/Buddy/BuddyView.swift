@@ -11,7 +11,14 @@ struct BuddyView: View {
     var message: String? = nil
     var onTap: (() -> Void)? = nil
 
+    /// After a minute of full-speed dancing, settle to a slow sway — an
+    /// undismissed buddy shouldn't burn CPU/battery for its whole timeout.
+    private let settleAfter: TimeInterval = 60
+    private let settledFPS: Double = 2
+    @State private var settled = false
+
     private var effectiveFPS: Double {
+        if settled { return settledFPS }
         let value = fps ?? sheet.manifest.fps
         return value > 0 ? value : 8
     }
@@ -40,6 +47,14 @@ struct BuddyView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onTap?()
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(message.map { "Scoot buddy: \($0)" } ?? "Scoot buddy")
+        .accessibilityAddTraits(onTap != nil ? .isButton : [])
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + settleAfter) {
+                settled = true
+            }
         }
     }
 

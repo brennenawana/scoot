@@ -49,8 +49,13 @@ final class BuddyOverlayNudge: NudgeStyle {
             message: "Time to scoot.",
             onTap: { [weak self] in self?.dismiss(outcome: .acknowledged) }
         )
-        let size = NSSize(width: 200, height: 190)
+        // Panel hugs the content's fitting size (rounded up to even points so
+        // centered children land on integral offsets) — a fixed oversized panel
+        // left the buddy floating ~100pt inboard of its corner.
         let hosting = NSHostingView(rootView: view)
+        let fitting = hosting.fittingSize
+        let size = NSSize(width: ceil(fitting.width / 2) * 2,
+                          height: ceil(fitting.height / 2) * 2)
         hosting.frame = NSRect(origin: .zero, size: size)
 
         let panel = OverlayPanel(size: size)

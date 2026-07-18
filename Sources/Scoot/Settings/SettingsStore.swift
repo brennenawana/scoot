@@ -78,6 +78,12 @@ final class SettingsStore: ObservableObject {
             "telemetryEnabled": true,
         ])
 
+        // registerDefaults is volatile — stamp the schema version to disk so the
+        // v0.2 migration ladder has a persisted value to read.
+        if defaults.persistentDomain(forName: Self.suiteName)?["settingsSchemaVersion"] == nil {
+            defaults.set(1, forKey: "settingsSchemaVersion")
+        }
+
         if let existing = defaults.string(forKey: "installID") {
             installID = existing
         } else {

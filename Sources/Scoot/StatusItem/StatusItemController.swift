@@ -58,6 +58,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
             button.action = #selector(statusItemClicked)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.toolTip = "Scoot"
+            button.setAccessibilityLabel("Scoot")
         }
 
         buildQuickMenu()

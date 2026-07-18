@@ -51,6 +51,9 @@ final class AppCoordinator {
         settings.onIntervalChange = { [weak self] in self?.scheduler.intervalChanged() }
 
         systemObserver = SystemStateObserver { [weak self] event in
+            // A locked/sleeping screen ends any running performance — no buddy
+            // dancing (and timing out) behind the lock screen.
+            if case .suspended = event { self?.dispatcher.cancelAll() }
             self?.scheduler.handle(event)
         }
 
@@ -81,7 +84,7 @@ final class AppCoordinator {
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(
                 settings: settings,
-                previewStyle: { [weak self] id in self?.dispatcher.style(withID: id)?.preview() },
+                previewStyle: { [weak self] id in self?.dispatcher.preview(styleID: id) },
                 revealLog: { [weak self] in self?.telemetry.revealInFinder() }
             )
         }

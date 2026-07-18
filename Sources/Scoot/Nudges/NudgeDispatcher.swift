@@ -25,6 +25,23 @@ final class NudgeDispatcher {
         styles.first { $0.id == id }
     }
 
+    /// Settings "try it" path. Uses fire() so preview outcomes (a clicked or
+    /// timed-out preview buddy) reach telemetry instead of vanishing.
+    func preview(styleID: NudgeStyleID) {
+        guard let style = style(withID: styleID) else { return }
+        telemetry.log(TelemetryEvent(name: "nudge_preview", properties: ["style": styleID]))
+        let context = NudgeContext(firedAt: Date(), interval: 0, sessionNudgeCount: 0, variants: [:])
+        let telemetry = self.telemetry
+        style.fire(context) { outcome in
+            telemetry.log(TelemetryEvent(name: "nudge_outcome", properties: [
+                "style": style.id,
+                "outcome": outcome.rawValue,
+                "primary": "false",
+                "preview": "true",
+            ]))
+        }
+    }
+
     func fire(context: NudgeContext,
               enabledIDs: [NudgeStyleID],
               completion: @escaping (NudgeOutcome) -> Void) {
