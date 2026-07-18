@@ -49,6 +49,7 @@ Open `Package.swift` in Xcode if you want the debugger. There is deliberately no
 | [EXPERIMENTATION.md](docs/EXPERIMENTATION.md) | Delight is empirical: the experiment engine, metrics, first hypotheses |
 | [DISTRIBUTION.md](docs/DISTRIBUTION.md) | Direct-download strategy, audience sequencing, the rare-drop calendar |
 | [ROADMAP.md](docs/ROADMAP.md) | v0.1 → v0.5 milestones and the expansion arcs (modes, economy, hardware, Windows, local AI) |
+| [BACKLOG.md](docs/BACKLOG.md) | The open ledger: deferred verifications, known gaps, the agreed path into v0.3 |
 | [DESIGN.md](docs/DESIGN.md) | The two-layer aesthetic, pixel art spec, Claude Design workflow + prompts |
 | [VERIFY.md](docs/VERIFY.md) | First-run-on-a-real-Mac checklist |
 | [RELEASING.md](docs/RELEASING.md) | Signing, notarization, Sparkle, Homebrew runbook |

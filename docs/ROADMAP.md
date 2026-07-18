@@ -11,14 +11,20 @@ two working nudge styles (chime + buddy drop-in with placeholder sprite), settin
 window, launch at login, protocol seams for nudges/collectibles/experiments.
 **Exit: runs all day on the developer's Mac without a wrong-moment nudge.**
 
-### v0.2 — The buddy is real
-Sprite pipeline for the 12-species launch cast (Aseprite → atlas), collection
-(Scootdex), roll tickets + reveal sequence, buddy naming/bond, duplicate → sparks.
+### v0.2 — The buddy is real *(built + machine-verified 2026-07-18; exit evidence pending)*
+Sprite pipeline for the 12-species launch cast (char-grid generator → atlas),
+collection (Scootdex), roll tickets + reveal sequence, buddy naming/bond,
+duplicate → sparks — all shipped as a plug-in behind the `ScootFeature` seam.
+Known simplifications and the deferred verifications live in
+[BACKLOG.md](BACKLOG.md).
 **Exit: first-session naming rate >60% among testflight-style friends & family.**
 
 ### v0.3 — Eyes open
 Experiment manifest + assignment, telemetry (opt-out honest toggle), first
-experiments live (E1–E3), experiment log public.
+experiments live (E1–E3), experiment log public. Sequencing decided 2026-07-18
+(BACKLOG.md §5): build the manifest/uploader infrastructure dark, measure the
+friends round with it, and only then flip experiments live — infrastructure
+before verdicts respects the v0.2 gate.
 **Exit: one experiment reaches a written ship/setting/kill verdict.**
 
 ### v0.4 — Launch polish
