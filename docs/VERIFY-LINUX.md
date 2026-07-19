@@ -165,6 +165,9 @@ Ground truth is `~/.local/share/scoot/events.jsonl`.
       source=acknowledged`
 - [x] **Anti-cheese** — a second click inside 10 minutes logged
       `scoot_credit_suppressed reason=manual-rate-limit` and credited nothing
+- [x] **The chime, by ear** — Brennen confirmed 2026-07-19: it sounds right.
+      (It also decodes in a unit test, which is what CI can check without an
+      audio device.)
 - [x] **Max nudge duration** — an ignored overlay logged
       `nudge_outcome timedOut` exactly 12s after `nudge_fired`
       (18:33:45 → 18:33:57), the PRODUCT.md §3 ceiling
@@ -307,6 +310,19 @@ socket — and tears down the X server the session was attached to, so
 gnome-session dies straight back to the greeter. Ubuntu's Wayland session
 expects **GDM3**, which is installed but not the active display manager.
 
+Three facts for whoever attempts the switch:
+
+* The GPU is **Intel HD Graphics 630**, no NVIDIA module loaded. Wayland is
+  viable here — nothing about this hardware requires X11.
+* `/etc/gdm3/custom.conf` already carries `WaylandEnable=false` (edited
+  2026-04-28). That line, not the hardware, is what would keep Wayland off
+  even after switching to GDM3.
+* **No autologin is configured** in either display manager, so this box
+  already comes up at a login prompt after a reboot. Switching display
+  managers does not make unattended recovery any worse than it already is —
+  but it does not make it better either, and the graphical session hosts real
+  work (OBS, Discord).
+
 ## 7c. XFCE X11 — verified through a nested X server
 
 Same trick as §7b, one layer down: a nested **Xephyr** X server running
@@ -385,8 +401,7 @@ not take on a production box.
 | **GNOME Wayland as a real login session** | Blocked on LightDM (§7b); needs the display manager switched to GDM3, which costs a reboot on a production box | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
 | **XFCE X11 as a real login session** | A logout into "Xfce Session" | Autostart, lock/sleep and whole-session idle *under XFCE*. The cell's code paths are already covered by the nested run in §7c |
 | **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh. Lower risk than it was: lock/unlock is now verified (§5) and rides the same logind listener and the same core transition |
-| **The chime, by ear** | Playing audio on someone's desk | The 2-note chime is warm and not startling |
-| **The full honest workday** | A real day of real work | The v0.1 exit bar: zero wrong-moment nudges |
+| **The full honest workday** | A real day of real work | The v0.1 exit bar: zero wrong-moment nudges. In progress 2026-07-19: running at a 20-minute interval with a background job checking for >= 2 nudges after an hour |
 
 **A note on scope.** An earlier draft of the exit bar read "never nudging
 while OBS records". That was development hygiene — keeping the buddy out of a
