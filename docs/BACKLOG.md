@@ -58,13 +58,28 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       conformant to every golden vector + mirrored 9-sigma property tests,
       deps serde+serde_json only. Owner Brennen waived the Arc D calendar
       gate for execution.
-- [ ] Phases 2a/2b (Windows shell, Linux shell) — next; run M2 on the real
-      Windows machine per the kickoff prompt; full spec in
-      [PORTS.md](PORTS.md). M3 bench surveyed 2026-07-19: clawdbot-server
-      (Ubuntu 24.04, GNOME 46) covers the GNOME/X11 cell live (appindicator
-      tray present, real screenshots via ImageMagick); Wayland/XFCE need a
-      coordinated logout (it's a busy production box — be a guest); KDE
-      cell needs a VM or a later install; Rust toolchain not yet installed.
+- [x] **Phase 2a — Windows shell (M2)** — closed 2026-07-19: `shells/windows`
+      (scoot-windows) at v0.1 parity. Tray citizen with the full settings menu,
+      coarse ticks into core-rs's reducer, `GetLastInputInfo` idle,
+      `WTSRegisterSessionNotification` lock/unlock, `WM_POWERBROADCAST`
+      sleep/wake + display power, `SHQueryUserNotificationState` deference
+      wired from day one, three nudge styles (chime / tray-bounce / layered
+      buddy overlay), movement auto-credit, `%APPDATA%\Scoot\` storage.
+      Deps windows + png on top of the core's serde. 129 shell tests +
+      the core's conformance and property suites green on Windows.
+      Verified on the real desktop: see [VERIFY-WINDOWS.md](VERIFY-WINDOWS.md)
+      — the ⬜ items there are the honest open set.
+- [ ] **M2 human-only evidence** (only Brennen can close these): the tray menu
+      driven end-to-end (Win11 hides the notification area from UI Automation),
+      lock/sleep across a deadline, a real screen-share deference test,
+      multi-monitor corner placement, launch-at-login across a real log out/in,
+      Explorer-restart tray recovery, and the full honest workday.
+- [ ] **Phase 2b — Linux shell (M3)** — next; full spec in [PORTS.md](PORTS.md)
+      §8. Bench surveyed 2026-07-19: clawdbot-server (Ubuntu 24.04, GNOME 46)
+      covers the GNOME/X11 cell live (appindicator tray present, real
+      screenshots via ImageMagick); Wayland/XFCE need a coordinated logout
+      (it's a busy production box — be a guest); KDE cell needs a VM or a
+      later install; Rust toolchain not yet installed.
 
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 

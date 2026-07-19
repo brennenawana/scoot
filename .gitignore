@@ -7,3 +7,7 @@ xcuserdata/
 
 # Rust workspace build output
 /target
+
+# Python bytecode from the asset generators in scripts/
+__pycache__/
+*.pyc
