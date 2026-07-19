@@ -66,6 +66,23 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       coordinated logout (it's a busy production box — be a guest); KDE
       cell needs a VM or a later install; Rust toolchain not yet installed.
 
+## 3c. Open design question: presence is not movement (Brennen, 2026-07-19)
+
+Idle-then-return conflates "away from desk" with "at desk, hands off"
+(hour-long video = the worst sitting, currently read as absence → held
+nudge → interval reset crediting phantom movement), and real compliance
+(a posture shift) is invisible to software and shouldn't cost a click.
+Ideation, no decision yet. Candidate directions, roughly by conviction:
+keep idle for scheduling / demote it for crediting; add media-playback
+awareness as a third presence state (present-passive — v0.4 detection
+family); enforce PRODUCT.md's 12s nudge duration (the overlay currently
+lingers up to 10 min, which creates the respond-to-me pressure);
+boundary-moment retrospective micro-ask ("Did you scoot back there?" at
+passive→active transition); resist trust-by-default crediting (farmable —
+constitutional risk); hardware (watch/desk device, Arc C) is the true
+movement sensor. Settle empirically once v0.3 telemetry is live — credit
+mechanics are an experiment family and interact with E2 (roll cadence).
+
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
 Onboarding flow proper (roll-first) · share cards + GIF export ·
