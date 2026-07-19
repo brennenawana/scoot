@@ -12,7 +12,7 @@ final class GoldenVectorDriftTests: XCTestCase {
         .deletingLastPathComponent()   // ScootCoreTests/
         .deletingLastPathComponent()   // Tests/
         .deletingLastPathComponent()   // repo root
-        .appendingPathComponent("tests/golden")
+        .appendingPathComponent("Tests/golden")
 
     func testCommittedVectorsMatchImplementation() throws {
         let generated = try GoldenVectors.all()
@@ -20,11 +20,11 @@ final class GoldenVectorDriftTests: XCTestCase {
         for (name, data) in generated.sorted(by: { $0.key < $1.key }) {
             let url = Self.goldenDir.appendingPathComponent(name)
             guard let committed = try? Data(contentsOf: url) else {
-                XCTFail("missing tests/golden/\(name) — run `swift run scoot-vectors`")
+                XCTFail("missing Tests/golden/\(name) — run `swift run scoot-vectors`")
                 continue
             }
             XCTAssertEqual(committed, data,
-                           "tests/golden/\(name) drifted from the implementation — " +
+                           "Tests/golden/\(name) drifted from the implementation — " +
                            "if the behavior change is intended, regenerate vectors and " +
                            "update every port in the same PR (docs/CONTRACTS.md)")
         }

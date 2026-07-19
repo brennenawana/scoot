@@ -7,13 +7,13 @@ on:
     paths:
       - "core-rs/**"
       - "Cargo.*"
-      - "tests/golden/**"
+      - "Tests/golden/**"
       - ".github/workflows/rust.yml"
   pull_request:
     paths:
       - "core-rs/**"
       - "Cargo.*"
-      - "tests/golden/**"
+      - "Tests/golden/**"
       - ".github/workflows/rust.yml"
 
 jobs:

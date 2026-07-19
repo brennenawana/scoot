@@ -2,9 +2,9 @@ import Foundation
 import ScootVectors
 
 // Regenerates the golden cross-implementation vectors (docs/CONTRACTS.md).
-// Usage: swift run scoot-vectors [output-dir]   (default: tests/golden)
+// Usage: swift run scoot-vectors [output-dir]   (default: Tests/golden)
 let outputDir = URL(fileURLWithPath: CommandLine.arguments.count > 1
-    ? CommandLine.arguments[1] : "tests/golden")
+    ? CommandLine.arguments[1] : "Tests/golden")
 
 do {
     try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)

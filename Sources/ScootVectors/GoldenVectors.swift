@@ -6,7 +6,7 @@ import ScootCore
 /// Every conformant Scoot core — the Swift one in this package, core-rs, any
 /// future port — must reproduce these outputs exactly. The vectors are
 /// *generated from the Swift implementation* (the reference) by `swift run
-/// scoot-vectors`, committed under tests/golden/, and enforced two ways:
+/// scoot-vectors`, committed under Tests/golden/, and enforced two ways:
 /// a Swift drift test (the reference can't change silently) and each port's
 /// conformance harness (the port can't diverge).
 ///

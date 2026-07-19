@@ -294,7 +294,7 @@ property is that gating errs toward exclusion. Vectors: `semver.json`.
 
 ## 10. Golden vectors
 
-Location `tests/golden/`; regenerate with `swift run scoot-vectors`; the
+Location `Tests/golden/`; regenerate with `swift run scoot-vectors`; the
 Swift suite's `GoldenVectorDriftTests` fails if committed vectors differ
 from the reference implementation. Files: `rng.json`, `rolls.json`,
 `movement.json`, `scheduler.json`, `assignment.json`, `semver.json`,

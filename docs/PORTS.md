@@ -47,7 +47,7 @@ Cargo.toml               # NEW: workspace root for the Rust members
 core-rs/                 # Phase 1: portable core crate
 shells/windows/          # Phase 2a
 shells/linux/            # Phase 2b
-tests/golden/            # Phase 0: cross-implementation vectors (JSON)
+Tests/golden/            # Phase 0: cross-implementation vectors (JSON)
 Sources/, Tests/         # existing Swift, untouched by this effort
 scripts/                 # asset generators (stdlib Python — already portable)
 ```
@@ -85,7 +85,7 @@ them is a cross-platform breaking change and must be escalated (see §12).
    names, types, units, encodings (UTF-8, ISO-8601), invariants, and a
    changelog section. Written so an implementer never needs to read Swift.
 2. A Swift executable target (`scoot-vectors`) that emits JSON test vectors to
-   `tests/golden/`:
+   `Tests/golden/`:
    - `scheduler.json`: timelines of (event, elapsed) → expected decisions,
      exported from the cases in SchedulerCoreTests.
    - `rolls.json`: for N seeds × M rolls against the launch catalog: the exact

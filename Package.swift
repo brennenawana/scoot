@@ -33,7 +33,7 @@ let package = Package(
         ),
 
         // Golden cross-implementation vectors (docs/PORTS.md, docs/CONTRACTS.md):
-        // generated from ScootCore (the reference), committed to tests/golden/,
+        // generated from ScootCore (the reference), committed to Tests/golden/,
         // drift-checked by the test suite, consumed by every port's
         // conformance harness.
         .target(name: "ScootVectors", dependencies: ["ScootCore"]),
