@@ -1,0 +1,5 @@
+# Rust workspace for the ports (docs/PORTS.md): the portable core now,
+# platform shells later. The Swift package (Package.swift) is unaffected.
+[workspace]
+members = ["core-rs"]
+resolver = "2"

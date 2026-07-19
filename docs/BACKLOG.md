@@ -49,11 +49,18 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
 
 ## 3b. Ports (PRD written, execution mostly gated — see PORTS.md)
 
-- [ ] **Phase 0 — contract freeze + golden vectors** (ungated, ~1 day):
-      docs/CONTRACTS.md + `scoot-vectors` exporter + CI drift alarm
-      (PORTS.md §5). Hardens the macOS app regardless of ports.
-- [ ] Phases 1–3 (Rust core, Windows shell, Linux shell) — gated per
-      ROADMAP Arc D; full spec in [PORTS.md](PORTS.md).
+- [x] **Phase 0 — contract freeze + golden vectors** — closed 2026-07-19:
+      docs/CONTRACTS.md, ScootVectors + `swift run scoot-vectors`,
+      Tests/golden/ (8 files), GoldenVectorDriftTests, rust.yml CI matrix.
+      Roll engine switched to the owned bounded draw in the same change.
+- [x] **Phase 1 — core-rs** — closed 2026-07-19: scoot-core crate
+      (rng/roll/movement/scheduler/experiments/collection/telemetry),
+      conformant to every golden vector + mirrored 9-sigma property tests,
+      deps serde+serde_json only. Owner Brennen waived the Arc D calendar
+      gate for execution.
+- [ ] Phases 2a/2b (Windows shell, Linux shell) — next; run M2 on the real
+      Windows machine per the kickoff prompt; full spec in
+      [PORTS.md](PORTS.md).
 
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
