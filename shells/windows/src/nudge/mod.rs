@@ -64,7 +64,12 @@ impl NudgeOutcome {
 pub struct NudgeContext {
     /// Monotonic-ish shell seconds, the same clock the scheduler runs on.
     pub fired_at: f64,
+    /// Carried for parity with the macOS NudgeContext and for styles that
+    /// will want them (a re-tell needs the interval; escalation needs the
+    /// count). Nothing reads them at v0.1.
+    #[allow(dead_code)]
     pub interval: f64,
+    #[allow(dead_code)]
     pub session_nudge_count: u64,
     /// Experiment arms in effect at fire time (PHILOSOPHY.md §4: an install
     /// never flickers between arms, so this is a snapshot, not a live read).

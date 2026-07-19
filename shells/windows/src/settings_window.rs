@@ -182,7 +182,7 @@ fn build_controls(
         control
     };
 
-    let mut header = |add: &mut dyn FnMut(&str, &str, u32, i32, i32, i32, i32, i32) -> HWND,
+    let header = |add: &mut dyn FnMut(&str, &str, u32, i32, i32, i32, i32, i32) -> HWND,
                       text: &str,
                       y: &mut i32| {
         add("STATIC", text, 0, s(PAD), *y, full, s(20), 0);

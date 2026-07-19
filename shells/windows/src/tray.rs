@@ -91,6 +91,7 @@ pub const CMD_SCALE_BASE: u32 = 500;
 pub struct MenuState<'a> {
     pub status_line: String,
     pub is_paused: bool,
+    #[allow(dead_code)]
     pub settings: &'a Settings,
     pub launch_at_login: bool,
     pub styles: Vec<(&'static str, &'static str)>,
@@ -203,7 +204,7 @@ impl Tray {
         let previous = self.current.replace(icon);
         self.current_index = index;
         let data = self.data();
-        unsafe { Shell_NotifyIconW(NIM_MODIFY, &data) };
+        unsafe { let _ = Shell_NotifyIconW(NIM_MODIFY, &data); }
         // Only now is the old handle certainly unused by the shell.
         drop(previous);
     }
@@ -233,7 +234,7 @@ pub fn show_menu(hwnd: HWND, state: &MenuState) -> Option<u32> {
         // Without this the menu will not close when the user clicks elsewhere:
         // a popup owned by a background window never gets the activation change
         // that dismisses it.
-        unsafe { SetForegroundWindow(hwnd) };
+        unsafe { let _ = SetForegroundWindow(hwnd); }
 
         let choice = unsafe {
             TrackPopupMenu(
@@ -266,7 +267,7 @@ impl Drop for Tray {
     fn drop(&mut self) {
         if self.added {
             let data = self.data();
-            unsafe { Shell_NotifyIconW(NIM_DELETE, &data) };
+            unsafe { let _ = Shell_NotifyIconW(NIM_DELETE, &data); }
         }
     }
 }
@@ -359,6 +360,7 @@ pub fn style_index(command: u32, base: u32, count: usize) -> Option<usize> {
 
 /// A menu command paired with what it means. Kept as data so `app.rs` can
 /// dispatch without re-deriving the ranges.
+#[allow(dead_code)]
 pub fn describe_commands() -> HashMap<u32, &'static str> {
     HashMap::from([
         (CMD_NUDGE_NOW, "nudge_now"),

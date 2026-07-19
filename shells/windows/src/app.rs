@@ -34,7 +34,7 @@ use crate::nudge::{bounce::IconBounceNudge, sound::ChimeNudge, Dispatcher, Nudge
 use crate::presence::{self, Presence};
 use crate::render::sprite::SpriteSheet;
 use crate::session::{self, SessionNotifications};
-use crate::storage::settings::{Settings, INTERVAL_CHOICES, SCALE_CHOICES, STYLE_BUDDY_OVERLAY};
+use crate::storage::settings::{Settings, INTERVAL_CHOICES, SCALE_CHOICES};
 use crate::storage::{app_data_dir, EventLog, OverlayCorner};
 use crate::tray::{self, MenuState, Tray};
 

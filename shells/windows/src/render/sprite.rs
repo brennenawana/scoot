@@ -196,6 +196,7 @@ pub fn decode_png_rgba(bytes: &[u8]) -> Result<Frame, String> {
 /// else. This is constitutional (DESIGN.md §2, PORTS.md §9): any averaging
 /// would invent colours the artist never chose, and one blurry buddy breaks
 /// the spell. There is deliberately no fractional variant of this function.
+#[allow(dead_code)]
 pub fn scale_nearest(frame: &Frame, scale: u32) -> Frame {
     assert!(scale >= 1, "sprite scale must be a whole number >= 1, got {scale}");
     if scale == 1 {

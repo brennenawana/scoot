@@ -7,4 +7,4 @@ pub mod settings;
 
 pub use events::EventLog;
 pub use paths::app_data_dir;
-pub use settings::{OverlayCorner, Settings};
+pub use settings::OverlayCorner;

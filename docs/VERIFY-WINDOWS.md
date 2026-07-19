@@ -248,6 +248,31 @@ one" reached without inventing a state or touching a golden vector.
   runs at 15 fps only while something is on screen and is killed otherwise, so
   an idle Scoot costs a 15-second wakeup.
 
+## 8b. Packaging and install
+
+```powershell
+scripts\make-windows-dist.ps1
+```
+
+- ✅ Produces `dist/Scoot-0.1.0-win-x64.zip` (356 KB) with `Scoot.exe`,
+  `install.ps1`, `README.txt`, `LICENSE`.
+- ✅ **Installed the way a user would**: unzip to a neutral folder, run
+  `install.ps1`. Lands in `%LOCALAPPDATA%\Programs\Scoot\Scoot.exe`, adds the
+  Start Menu entry, and repoints an existing login entry from wherever it used
+  to point. Verified the running process really is the installed copy, not the
+  build output.
+- ✅ **Uninstall round-trip**: `install.ps1 -Uninstall` removes the program,
+  the Start Menu entry and the login entry, leaves `%APPDATA%\Scoot` intact,
+  and a reinstall afterwards works. Confirmed settings and `events.jsonl`
+  survived both.
+- ✅ Reinstalling does **not** silently re-enable Launch at login. Installing
+  an app must not opt the user into autostart; only an existing entry is
+  repointed.
+- ⬜ **SmartScreen on a machine that has never seen this binary.** The build is
+  unsigned (PORTS.md §13), so a first run elsewhere will warn. Not reproducible
+  on the machine that built it.
+- ⬜ **Login actually launching it** after a real log out / log in.
+
 ## 9. What M2 deliberately does not include
 
 The collection loop (v0.2), any networking, auto-update, and code signing are

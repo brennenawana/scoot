@@ -65,6 +65,7 @@ impl Presence {
     /// and a reminder app that quietly stops reminding is worse than one that
     /// occasionally interrupts — the user can see an unwanted nudge, but they
     /// cannot see a nudge that never came.
+    #[allow(dead_code)]
     pub fn is_free(self) -> bool {
         matches!(self, Presence::Free | Presence::Unknown)
     }

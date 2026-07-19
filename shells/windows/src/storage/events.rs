@@ -43,6 +43,7 @@ impl EventLog {
         &self.path
     }
 
+    #[allow(dead_code)]
     pub fn is_enabled(&self) -> bool {
         self.enabled
     }

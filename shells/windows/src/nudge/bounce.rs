@@ -4,7 +4,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::tray::{Tray, FRAME_CALM, FRAME_COUNT};
+use crate::tray::{Tray, FRAME_COUNT};
 
 use super::{NudgeContext, NudgeOutcome, NudgeStyle};
 
@@ -35,6 +35,11 @@ impl IconBounceNudge {
     /// A short celebration burst when a scoot is credited, reusing the same
     /// beats. Driven by the coordinator rather than by a nudge, so it is a
     /// plain method rather than part of the style seam.
+    ///
+    /// Unused at v0.1: the celebration beat belongs to the collection loop
+    /// (PRODUCT.md §1), which M2 does not ship. Kept because the tray already
+    /// has the frames for it and M4 will want exactly this.
+    #[allow(dead_code)]
     pub fn celebrate(tray: &Rc<RefCell<Tray>>, elapsed: f64) {
         tray.borrow_mut().set_frame(Self::bounce_frame(elapsed));
     }
@@ -88,7 +93,7 @@ mod tests {
         // Frame 0 mid-hop would read as a dropped beat.
         for step in 0..40 {
             let frame = IconBounceNudge::bounce_frame(step as f64 / BOUNCE_FPS);
-            assert_ne!(frame, FRAME_CALM, "step {step} fell back to the calm pose");
+            assert_ne!(frame, crate::tray::FRAME_CALM, "step {step} fell back to the calm pose");
             assert!(frame < FRAME_COUNT, "step {step} ran off the strip");
         }
     }
