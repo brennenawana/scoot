@@ -60,7 +60,11 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       gate for execution.
 - [ ] Phases 2a/2b (Windows shell, Linux shell) — next; run M2 on the real
       Windows machine per the kickoff prompt; full spec in
-      [PORTS.md](PORTS.md).
+      [PORTS.md](PORTS.md). M3 bench surveyed 2026-07-19: clawdbot-server
+      (Ubuntu 24.04, GNOME 46) covers the GNOME/X11 cell live (appindicator
+      tray present, real screenshots via ImageMagick); Wayland/XFCE need a
+      coordinated logout (it's a busy production box — be a guest); KDE
+      cell needs a VM or a later install; Rust toolchain not yet installed.
 
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
