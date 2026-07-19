@@ -1,0 +1,147 @@
+{
+  "duplicateSparks" : {
+    "common" : 10,
+    "epic" : 80,
+    "rare" : 40,
+    "secret" : 160,
+    "uncommon" : 20
+  },
+  "meterTarget" : 5,
+  "migrationV1" : {
+    "expected" : {
+      "meterScoots" : 0,
+      "owned" : [
+        {
+          "bondScoots" : 17,
+          "givenName" : "Scooter",
+          "speciesID" : "classic"
+        }
+      ],
+      "rollTickets" : 1,
+      "schemaVersion" : 2,
+      "scootsDay" : null,
+      "scootsToday" : 0,
+      "sparks" : 30,
+      "totalScoots" : 0
+    },
+    "v1Document" : "{\"schemaVersion\": 1, \"activeBuddyIndex\": 0,\n \"owned\": [{\"speciesID\": \"classic\", \"givenName\": \"Scooter\",\n            \"obtainedAt\": \"2026-06-01T12:00:00Z\", \"bondScoots\": 17}],\n \"sparks\": 30, \"rollTickets\": 1}"
+  },
+  "scenario" : {
+    "finalState" : {
+      "activeBuddyIndex" : 0,
+      "meterScoots" : 0,
+      "owned" : [
+        {
+          "bondScoots" : 5,
+          "givenName" : "Toast",
+          "obtainedAt" : "2026-06-01T12:00:00Z",
+          "speciesID" : "round-blob"
+        }
+      ],
+      "rollTickets" : 0,
+      "schemaVersion" : 2,
+      "scootsDay" : "2026-07-19",
+      "scootsToday" : 3,
+      "sparks" : 10,
+      "totalScoots" : 10
+    },
+    "ops" : [
+      {
+        "givenName" : "Early",
+        "op" : "redeem",
+        "outcome" : {
+          "result" : "noTicket"
+        },
+        "species" : "round-blob"
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 1,
+        "op" : "credit",
+        "scootsToday" : 1,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 2,
+        "op" : "credit",
+        "scootsToday" : 2,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 3,
+        "op" : "credit",
+        "scootsToday" : 3,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 4,
+        "op" : "credit",
+        "scootsToday" : 4,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 0,
+        "op" : "credit",
+        "scootsToday" : 5,
+        "ticketMinted" : true
+      },
+      {
+        "givenName" : "Blobby",
+        "op" : "redeem",
+        "outcome" : {
+          "index" : 0,
+          "result" : "newBuddy"
+        },
+        "species" : "round-blob"
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 1,
+        "op" : "credit",
+        "scootsToday" : 6,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-18",
+        "meterScoots" : 2,
+        "op" : "credit",
+        "scootsToday" : 7,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-19",
+        "meterScoots" : 3,
+        "op" : "credit",
+        "scootsToday" : 1,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-19",
+        "meterScoots" : 4,
+        "op" : "credit",
+        "scootsToday" : 2,
+        "ticketMinted" : false
+      },
+      {
+        "day" : "2026-07-19",
+        "meterScoots" : 0,
+        "op" : "credit",
+        "scootsToday" : 3,
+        "ticketMinted" : true
+      },
+      {
+        "givenName" : "Blobby 2",
+        "op" : "redeem",
+        "outcome" : {
+          "result" : "duplicate",
+          "sparksEarned" : 10
+        },
+        "species" : "round-blob"
+      }
+    ]
+  }
+}

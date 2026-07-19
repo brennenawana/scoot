@@ -1,0 +1,875 @@
+{
+  "cases" : [
+    {
+      "name" : "start_then_first_fire",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 60,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 5
+        },
+        {
+          "at" : 2700,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "type" : "fireNudge"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5400
+          },
+          "idle" : 5
+        },
+        {
+          "at" : 2760,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5400
+          },
+          "idle" : 5
+        }
+      ]
+    },
+    {
+      "name" : "idle_hold_then_quick_return_fires",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2700,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "user_idle",
+              "name" : "nudge_held",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "absenceBefore" : 200,
+            "case" : "holding",
+            "heldAt" : 2700
+          },
+          "idle" : 200
+        },
+        {
+          "at" : 2715,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "absenceBefore" : 200,
+            "case" : "holding",
+            "heldAt" : 2700
+          },
+          "idle" : 215
+        },
+        {
+          "at" : 2730,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "type" : "fireNudge"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5430
+          },
+          "idle" : 10
+        }
+      ]
+    },
+    {
+      "name" : "idle_hold_long_absence_resets",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2700,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "user_idle",
+              "name" : "nudge_held",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "absenceBefore" : 250,
+            "case" : "holding",
+            "heldAt" : 2700
+          },
+          "idle" : 250
+        },
+        {
+          "at" : 2760,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "long_absence",
+              "name" : "interval_reset",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5460
+          },
+          "idle" : 310
+        },
+        {
+          "at" : 2800,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5460
+          },
+          "idle" : 5
+        }
+      ]
+    },
+    {
+      "name" : "suspend_short_resume_keeps_deadline",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 600,
+          "event" : {
+            "reason" : "screenLocked",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "screenLocked",
+            "since" : 600
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 700,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2700,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "type" : "fireNudge"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5400
+          },
+          "idle" : 3
+        }
+      ]
+    },
+    {
+      "name" : "suspend_long_resume_resets",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 600,
+          "event" : {
+            "reason" : "systemSleep",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "systemSleep",
+            "since" : 600
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 1000,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "absence_counted_as_movement",
+              "name" : "interval_reset",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 3700
+          },
+          "idle" : 0
+        }
+      ]
+    },
+    {
+      "name" : "resume_near_deadline_gets_wake_grace",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2690,
+          "event" : {
+            "reason" : "displaySleep",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "displaySleep",
+            "since" : 2690
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2695,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2755
+          },
+          "idle" : 0
+        }
+      ]
+    },
+    {
+      "name" : "suspend_reason_change_keeps_original_clock",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 100,
+          "event" : {
+            "reason" : "screenLocked",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "screenLocked",
+            "since" : 100
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 200,
+          "event" : {
+            "reason" : "systemSleep",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "systemSleep",
+            "since" : 100
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 250,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        }
+      ]
+    },
+    {
+      "name" : "holding_then_suspend_drops_held_nudge",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2700,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "user_idle",
+              "name" : "nudge_held",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "absenceBefore" : 200,
+            "case" : "holding",
+            "heldAt" : 2700
+          },
+          "idle" : 200
+        },
+        {
+          "at" : 2750,
+          "event" : {
+            "reason" : "screenLocked",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : null,
+            "reason" : "screenLocked",
+            "since" : 2750
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 2760,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 5460
+          },
+          "idle" : 0
+        }
+      ]
+    },
+    {
+      "name" : "user_requested_nudge_reanchors",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 1000,
+          "event" : {
+            "type" : "userRequestedNudge"
+          },
+          "expectEffects" : [
+            {
+              "type" : "fireNudge"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 3700
+          },
+          "idle" : 4
+        }
+      ]
+    },
+    {
+      "name" : "requested_nudge_while_suspended_ignored",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 50,
+          "event" : {
+            "reason" : "screenLocked",
+            "type" : "suspended"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "screenLocked",
+            "since" : 50
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 60,
+          "event" : {
+            "type" : "userRequestedNudge"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "suspended",
+            "previousNextFire" : 2700,
+            "reason" : "screenLocked",
+            "since" : 50
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 70,
+          "event" : {
+            "type" : "resumed"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        }
+      ]
+    },
+    {
+      "name" : "timed_pause_expires_then_runs",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 100,
+          "event" : {
+            "for" : 3600,
+            "type" : "paused"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "3600",
+              "name" : "paused",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "paused",
+            "until" : 3700
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 1800,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "paused",
+            "until" : 3700
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 3701,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "pause_expired",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 6401
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 6401,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+            {
+              "type" : "fireNudge"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 9101
+          },
+          "idle" : 2
+        }
+      ]
+    },
+    {
+      "name" : "manual_pause_needs_unpause",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 100,
+          "event" : {
+            "for" : null,
+            "type" : "paused"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "manual",
+              "name" : "paused",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "paused",
+            "until" : null
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 5000,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "paused",
+            "until" : null
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 5100,
+          "event" : {
+            "type" : "unpaused"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "resumed",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 7800
+          },
+          "idle" : 2
+        }
+      ]
+    },
+    {
+      "name" : "interval_change_reanchors",
+      "steps" : [
+        {
+          "at" : 0,
+          "event" : {
+            "type" : "started"
+          },
+          "expectEffects" : [
+            {
+              "detail" : "",
+              "name" : "scheduler_started",
+              "type" : "log"
+            }
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 0
+        },
+        {
+          "at" : 100,
+          "event" : {
+            "type" : "tick"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2700
+          },
+          "idle" : 2
+        },
+        {
+          "at" : 200,
+          "event" : {
+            "type" : "intervalChanged"
+          },
+          "expectEffects" : [
+
+          ],
+          "expectState" : {
+            "case" : "running",
+            "nextFire" : 2900
+          },
+          "idle" : 2
+        }
+      ]
+    }
+  ],
+  "config" : {
+    "activeThreshold" : 30,
+    "idleGrace" : 180,
+    "interval" : 2700,
+    "resetThreshold" : 300,
+    "wakeGrace" : 60
+  }
+}

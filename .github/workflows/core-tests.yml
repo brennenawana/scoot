@@ -15,5 +15,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build (ScootCore + guarded shell)
         run: swift build
-      - name: Test ScootCore
+      - name: Test ScootCore (includes the golden-vector drift alarm)
         run: swift test

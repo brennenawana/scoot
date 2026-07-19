@@ -1,0 +1,169 @@
+{
+  "cases" : [
+    {
+      "name" : "away_then_return_credits",
+      "steps" : [
+        {
+          "elapsed" : 15,
+          "idle" : 5,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 30,
+          "idle" : 3,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 60,
+          "idle" : 30,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 120,
+          "idle" : 90,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 180,
+          "idle" : 150,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 200,
+          "idle" : 2,
+          "verdict" : "movementDetected"
+        }
+      ]
+    },
+    {
+      "name" : "short_absence_expires",
+      "steps" : [
+        {
+          "elapsed" : 60,
+          "idle" : 45,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 120,
+          "idle" : 90,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 135,
+          "idle" : 3,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 900,
+          "idle" : 5,
+          "verdict" : "windowExpired"
+        }
+      ]
+    },
+    {
+      "name" : "window_edge_grace_credits",
+      "steps" : [
+        {
+          "elapsed" : 840,
+          "idle" : 10,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 900,
+          "idle" : 55,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 960,
+          "idle" : 115,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 1080,
+          "idle" : 235,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 1200,
+          "idle" : 3,
+          "verdict" : "movementDetected"
+        }
+      ]
+    },
+    {
+      "name" : "still_away_no_credit_until_return",
+      "steps" : [
+        {
+          "elapsed" : 320,
+          "idle" : 300,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 420,
+          "idle" : 400,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 430,
+          "idle" : 4,
+          "verdict" : "movementDetected"
+        }
+      ]
+    },
+    {
+      "name" : "two_short_absences_do_not_sum",
+      "steps" : [
+        {
+          "elapsed" : 70,
+          "idle" : 70,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 75,
+          "idle" : 2,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 150,
+          "idle" : 70,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 155,
+          "idle" : 3,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 900,
+          "idle" : 10,
+          "verdict" : "windowExpired"
+        }
+      ]
+    },
+    {
+      "name" : "never_away_expires",
+      "steps" : [
+        {
+          "elapsed" : 300,
+          "idle" : 3,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 600,
+          "idle" : 8,
+          "verdict" : "watching"
+        },
+        {
+          "elapsed" : 900,
+          "idle" : 2,
+          "verdict" : "windowExpired"
+        }
+      ]
+    }
+  ],
+  "config" : {
+    "awayThreshold" : 120,
+    "returnThreshold" : 15,
+    "window" : 900
+  }
+}

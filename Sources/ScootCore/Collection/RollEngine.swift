@@ -44,7 +44,7 @@ public enum RollEngine {
     ) -> Buddy {
         let commons = catalog.species(of: .common)
         guard !commons.isEmpty else { return roll(from: catalog, using: &rng) }
-        return commons[Int.random(in: 0..<commons.count, using: &rng)]
+        return commons[RandomDraw.uniform(commons.count, using: &rng)]
     }
 
     static func rollRarity<R: RandomNumberGenerator>(
@@ -54,7 +54,7 @@ public enum RollEngine {
         let present = RarityTier.allCases.filter { !catalog.species(of: $0).isEmpty }
         precondition(!present.isEmpty, "cannot roll from an empty catalog")
         let total = present.reduce(0) { $0 + $1.rollWeight }
-        var pick = Int.random(in: 0..<total, using: &rng)
+        var pick = RandomDraw.uniform(total, using: &rng)
         for tier in present {
             pick -= tier.rollWeight
             if pick < 0 { return tier }
@@ -68,6 +68,6 @@ public enum RollEngine {
         using rng: inout R
     ) -> Buddy {
         let pool = catalog.species(of: tier)
-        return pool[Int.random(in: 0..<pool.count, using: &rng)]
+        return pool[RandomDraw.uniform(pool.count, using: &rng)]
     }
 }

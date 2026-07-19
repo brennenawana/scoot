@@ -1,0 +1,70 @@
+{
+  "cases" : [
+    {
+      "applicable" : {
+        "0.3.0" : [
+          "buddy-dance-fps",
+          "roll-cadence"
+        ],
+        "0.4.0" : [
+          "buddy-dance-fps",
+          "roll-cadence"
+        ]
+      },
+      "document" : "{\"version\": 3, \"experiments\": [\n  {\"key\": \"buddy-dance-fps\", \"hypothesis\": \"h\",\n   \"arms\": [{\"id\": \"8fps\", \"weight\": 1}, {\"id\": \"12fps\", \"weight\": 1}]},\n  {\"key\": \"roll-cadence\", \"arms\": [{\"id\": \"5\", \"weight\": 3}, {\"id\": \"3\", \"weight\": 1}],\n   \"minAppVersion\": \"0.3.0\"}\n]}",
+      "name" : "valid_two_experiments",
+      "valid" : true
+    },
+    {
+      "applicable" : {
+        "0.3.0" : [
+          "alive"
+        ],
+        "0.4.0" : [
+          "alive"
+        ]
+      },
+      "document" : "{\"version\": 1, \"experiments\": [\n  {\"key\": \"alive\", \"arms\": [{\"id\": \"a\", \"weight\": 1}]},\n  {\"key\": \"dead\", \"arms\": [{\"id\": \"a\", \"weight\": 1}], \"killed\": true}\n]}",
+      "name" : "killed_excluded",
+      "valid" : true
+    },
+    {
+      "applicable" : {
+        "0.3.0" : [
+          "current"
+        ],
+        "0.4.0" : [
+          "future",
+          "current"
+        ]
+      },
+      "document" : "{\"version\": 1, \"experiments\": [\n  {\"key\": \"future\", \"arms\": [{\"id\": \"a\", \"weight\": 1}], \"minAppVersion\": \"0.4.0\"},\n  {\"key\": \"legacy\", \"arms\": [{\"id\": \"a\", \"weight\": 1}], \"maxAppVersion\": \"0.2.9\"},\n  {\"key\": \"current\", \"arms\": [{\"id\": \"a\", \"weight\": 1}],\n   \"minAppVersion\": \"0.3.0\", \"maxAppVersion\": \"0.5.0\"}\n]}",
+      "name" : "version_gated",
+      "valid" : true
+    },
+    {
+      "document" : "{\"version\": 1, \"experiments\": [\n  {\"key\": \"x\", \"arms\": [{\"id\": \"a\", \"weight\": 1}]},\n  {\"key\": \"x\", \"arms\": [{\"id\": \"b\", \"weight\": 1}]}\n]}",
+      "error" : "duplicateKey",
+      "name" : "duplicate_keys_invalid",
+      "valid" : false
+    },
+    {
+      "document" : "{\"version\": 1, \"experiments\": [{\"key\": \"x\", \"arms\": []}]}",
+      "error" : "noArms",
+      "name" : "empty_arms_invalid",
+      "valid" : false
+    },
+    {
+      "document" : "{\"version\": 1, \"experiments\": [{\"key\": \"x\", \"arms\": [{\"id\": \"a\", \"weight\": 0}]}]}",
+      "error" : "nonPositiveWeight",
+      "name" : "zero_weight_invalid",
+      "valid" : false
+    },
+    {
+      "document" : "{\"version\": 0, \"experiments\": []}",
+      "error" : "invalidVersion",
+      "name" : "zero_version_invalid",
+      "valid" : false
+    }
+  ]
+}

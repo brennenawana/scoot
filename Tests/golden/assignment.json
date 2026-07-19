@@ -1,0 +1,643 @@
+{
+  "cases" : [
+    {
+      "arm" : "b",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "variant",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "12fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-123",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "b",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "variant",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "12fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "install-abc",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "b",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "12fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "buddy-dance-fps"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "roll-cadence"
+    },
+    {
+      "arm" : "a",
+      "arms" : [
+        {
+          "id" : "a",
+          "weight" : 1
+        },
+        {
+          "id" : "b",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "control",
+      "arms" : [
+        {
+          "id" : "control",
+          "weight" : 3
+        },
+        {
+          "id" : "variant",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "y",
+      "arms" : [
+        {
+          "id" : "x",
+          "weight" : 0
+        },
+        {
+          "id" : "y",
+          "weight" : 2
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "only",
+      "arms" : [
+        {
+          "id" : "only",
+          "weight" : 5
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "pre-tell"
+    },
+    {
+      "arm" : "8fps",
+      "arms" : [
+        {
+          "id" : "8fps",
+          "weight" : 1
+        },
+        {
+          "id" : "12fps",
+          "weight" : 1
+        }
+      ],
+      "installID" : "8E2F4C57-1D4B-4A2B-9F5D-000000000000",
+      "key" : "pre-tell"
+    }
+  ]
+}

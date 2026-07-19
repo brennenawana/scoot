@@ -32,6 +32,13 @@ let package = Package(
             ]
         ),
 
-        .testTarget(name: "ScootCoreTests", dependencies: ["ScootCore"]),
+        // Golden cross-implementation vectors (docs/PORTS.md, docs/CONTRACTS.md):
+        // generated from ScootCore (the reference), committed to tests/golden/,
+        // drift-checked by the test suite, consumed by every port's
+        // conformance harness.
+        .target(name: "ScootVectors", dependencies: ["ScootCore"]),
+        .executableTarget(name: "scoot-vectors", dependencies: ["ScootVectors"]),
+
+        .testTarget(name: "ScootCoreTests", dependencies: ["ScootCore", "ScootVectors"]),
     ]
 )

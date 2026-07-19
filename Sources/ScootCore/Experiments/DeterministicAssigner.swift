@@ -27,7 +27,8 @@ public struct DeterministicAssigner: VariantAssigning {
 
     /// FNV-1a 64-bit. Chosen for stability across platforms and Swift versions
     /// (`Hasher` is seeded per-process, so it can never be used for assignment).
-    static func fnv1a(_ string: String) -> UInt64 {
+    /// Public because it's a cross-implementation contract (docs/CONTRACTS.md).
+    public static func fnv1a(_ string: String) -> UInt64 {
         var hash: UInt64 = 0xcbf29ce484222325
         for byte in string.utf8 {
             hash ^= UInt64(byte)
