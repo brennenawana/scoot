@@ -332,6 +332,14 @@ mod tests {
         fn drop(&mut self) {
             let wide = to_wide(&self.0);
             unsafe { let _ = RegDeleteKeyW(HKEY_CURRENT_USER, PCWSTR(wide.as_ptr())); }
+            // Also try the parents. RegDeleteKey only removes an *empty* key,
+            // so this cleans up after the last test to finish and quietly does
+            // nothing while others are still running — leaving no trace of the
+            // suite in the user's hive.
+            for parent in [TEST_ROOT, r"Software\Scoot"] {
+                let wide = to_wide(parent);
+                unsafe { let _ = RegDeleteKeyW(HKEY_CURRENT_USER, PCWSTR(wide.as_ptr())); }
+            }
         }
     }
 

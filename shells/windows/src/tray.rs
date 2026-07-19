@@ -24,18 +24,14 @@ use windows::Win32::UI::Shell::{
     NOTIFYICONDATAW,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    AppendMenuW, CreatePopupMenu, DestroyMenu, GetCursorPos, GetSystemMetrics, RegisterWindowMessageW,
-    SetForegroundWindow, TrackPopupMenu, HMENU, MF_CHECKED, MF_GRAYED, MF_POPUP, MF_SEPARATOR,
-    MF_STRING, MF_UNCHECKED, SM_CXSMICON, TPM_BOTTOMALIGN, TPM_RETURNCMD, TPM_RIGHTBUTTON,
-    WM_APP,
+    AppendMenuW, CreatePopupMenu, DestroyMenu, GetCursorPos, GetSystemMetrics,
+    RegisterWindowMessageW, SetForegroundWindow, TrackPopupMenu, HMENU, MF_GRAYED, MF_SEPARATOR,
+    MF_STRING, SM_CXSMICON, TPM_BOTTOMALIGN, TPM_RETURNCMD, TPM_RIGHTBUTTON, WM_APP,
 };
 
 use crate::render::dib::Icon;
 use crate::render::sprite::{decode_png_rgba, Frame};
-use crate::storage::settings::{
-    OverlayCorner, Settings, INTERVAL_CHOICES, SCALE_CHOICES, STYLE_BUDDY_OVERLAY,
-    STYLE_ICON_BOUNCE, STYLE_SOUND,
-};
+use crate::storage::settings::Settings;
 
 /// Our tray callback message. `WM_APP` and above are reserved for
 /// application-private messages, so this can never collide with a system one.
@@ -82,6 +78,7 @@ pub const CMD_REVEAL_LOG: u32 = 4;
 pub const CMD_LAUNCH_AT_LOGIN: u32 = 5;
 pub const CMD_TELEMETRY: u32 = 6;
 pub const CMD_QUIT: u32 = 7;
+pub const CMD_SETTINGS: u32 = 8;
 pub const CMD_INTERVAL_BASE: u32 = 100;
 pub const CMD_STYLE_BASE: u32 = 200;
 pub const CMD_PREVIEW_BASE: u32 = 300;
@@ -285,13 +282,12 @@ impl Drop for OwnedMenu {
 
 fn build_menu(state: &MenuState) -> Option<OwnedMenu> {
     let menu = OwnedMenu(unsafe { CreatePopupMenu() }.ok()?);
-    // Held so every submenu HMENU stays owned until TrackPopupMenu is done;
-    // MF_POPUP transfers ownership to the parent, so these are leaked into the
-    // parent deliberately and destroyed with it.
-    let mut sub_handles: Vec<HMENU> = Vec::new();
 
-    // The status line is the popover's job on macOS; here it is a disabled
-    // first item, which is the tray idiom for "information, not an action".
+    // Deliberately short. Right-click is the *shortcut*, not the settings
+    // surface — macOS bypasses its popover with the same handful of verbs and
+    // sends everything else to a real window. Cramming interval, styles,
+    // corner and size back in here as submenus is what turned the tray into
+    // an options selector in the first place.
     append_string(&menu.0, MF_STRING | MF_GRAYED, 0, &state.status_line);
     append_separator(&menu.0);
 
@@ -302,87 +298,7 @@ fn build_menu(state: &MenuState) -> Option<OwnedMenu> {
         append_string(&menu.0, MF_STRING, CMD_PAUSE, "Pause 1 Hour");
     }
     append_separator(&menu.0);
-
-    // Remind me every…
-    let intervals = unsafe { CreatePopupMenu() }.ok()?;
-    sub_handles.push(intervals);
-    for (index, minutes) in INTERVAL_CHOICES.iter().enumerate() {
-        let label = if *minutes == 1 {
-            "1 minute (testing)".to_string()
-        } else {
-            format!("{minutes} minutes")
-        };
-        let checked = state.settings.interval_minutes == *minutes;
-        append_string(
-            &intervals,
-            MF_STRING | if checked { MF_CHECKED } else { MF_UNCHECKED },
-            CMD_INTERVAL_BASE + index as u32,
-            &label,
-        );
-    }
-    append_submenu(&menu.0, intervals, "Remind me every");
-
-    // Nudge styles, with a preview per style.
-    let styles = unsafe { CreatePopupMenu() }.ok()?;
-    sub_handles.push(styles);
-    for (index, (id, display)) in state.styles.iter().enumerate() {
-        let checked = state.settings.is_style_enabled(id);
-        append_string(
-            &styles,
-            MF_STRING | if checked { MF_CHECKED } else { MF_UNCHECKED },
-            CMD_STYLE_BASE + index as u32,
-            display,
-        );
-    }
-    append_separator(&styles);
-    for (index, (_, display)) in state.styles.iter().enumerate() {
-        append_string(
-            &styles,
-            MF_STRING,
-            CMD_PREVIEW_BASE + index as u32,
-            &format!("Preview {}", display.to_lowercase()),
-        );
-    }
-    append_submenu(&menu.0, styles, "Nudge styles");
-
-    // Buddy corner and size.
-    let buddy = unsafe { CreatePopupMenu() }.ok()?;
-    sub_handles.push(buddy);
-    for (index, corner) in OverlayCorner::ALL.iter().enumerate() {
-        let checked = state.settings.corner() == *corner;
-        append_string(
-            &buddy,
-            MF_STRING | if checked { MF_CHECKED } else { MF_UNCHECKED },
-            CMD_CORNER_BASE + index as u32,
-            corner.label(),
-        );
-    }
-    append_separator(&buddy);
-    for (index, (scale, label)) in SCALE_CHOICES.iter().enumerate() {
-        let checked = state.settings.buddy_scale == *scale;
-        append_string(
-            &buddy,
-            MF_STRING | if checked { MF_CHECKED } else { MF_UNCHECKED },
-            CMD_SCALE_BASE + index as u32,
-            label,
-        );
-    }
-    append_submenu(&menu.0, buddy, "Buddy");
-    append_separator(&menu.0);
-
-    append_string(
-        &menu.0,
-        MF_STRING | if state.launch_at_login { MF_CHECKED } else { MF_UNCHECKED },
-        CMD_LAUNCH_AT_LOGIN,
-        "Launch at login",
-    );
-    append_string(
-        &menu.0,
-        MF_STRING | if state.settings.telemetry_enabled { MF_CHECKED } else { MF_UNCHECKED },
-        CMD_TELEMETRY,
-        "Share anonymous counts",
-    );
-    append_string(&menu.0, MF_STRING, CMD_REVEAL_LOG, "Reveal local event log");
+    append_string(&menu.0, MF_STRING, CMD_SETTINGS, "Settings…");
     append_separator(&menu.0);
     append_string(&menu.0, MF_STRING, CMD_QUIT, "Quit Scoot");
 
@@ -401,13 +317,6 @@ fn append_string(
 
 fn append_separator(menu: &HMENU) {
     unsafe { let _ = AppendMenuW(*menu, MF_SEPARATOR, 0, PCWSTR::null()); }
-}
-
-fn append_submenu(parent: &HMENU, child: HMENU, text: &str) {
-    let wide = to_wide(text);
-    unsafe {
-        let _ = AppendMenuW(*parent, MF_POPUP, child.0 as usize, PCWSTR(wide.as_ptr()));
-    }
 }
 
 /// Pick the art generated for this size, preferring an exact match and
@@ -564,6 +473,7 @@ mod tests {
 
     #[test]
     fn command_ranges_do_not_overlap() {
+        use crate::storage::settings::{INTERVAL_CHOICES, OverlayCorner, SCALE_CHOICES};
         let singles = [
             CMD_NUDGE_NOW, CMD_PAUSE, CMD_RESUME, CMD_REVEAL_LOG,
             CMD_LAUNCH_AT_LOGIN, CMD_TELEMETRY, CMD_QUIT,
@@ -588,10 +498,12 @@ mod tests {
     }
 
     #[test]
-    fn the_style_ids_the_menu_offers_are_the_contract_ids() {
-        for id in [STYLE_BUDDY_OVERLAY, STYLE_SOUND, STYLE_ICON_BOUNCE] {
-            assert!(!id.is_empty());
-        }
+    fn the_quick_menu_stays_a_shortcut_not_a_settings_surface() {
+        // The whole point of the popover and the Settings window: right-click
+        // is verbs only. If this list grows submenus again, the tray has
+        // turned back into an options selector.
+        let singles = [CMD_NUDGE_NOW, CMD_PAUSE, CMD_RESUME, CMD_SETTINGS, CMD_QUIT];
+        assert_eq!(singles.len(), 5, "the quick menu is five verbs and two separators");
     }
 
     #[test]

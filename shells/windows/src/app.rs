@@ -171,6 +171,39 @@ pub fn run() -> Result<(), String> {
 /// behaviour. Skipping the re-entrant call is always safe here: every caller
 /// is either a timer that will fire again or a notification that the outer
 /// call is already handling.
+/// A setting the Settings window changed. Routed through the coordinator
+/// rather than written from the window, so persistence, the scheduler
+/// re-anchor and the live overlay all stay in one place.
+pub enum SettingChange {
+    Interval(i64),
+    Corner(OverlayCorner),
+    Scale(i64),
+    Style(&'static str, bool),
+    LaunchAtLogin(bool),
+    Telemetry(bool),
+}
+
+/// Called by the popover and the Settings window. Safe to call from their
+/// window procs: they are entered from the message loop, so no coordinator
+/// borrow is live.
+pub fn dispatch_command(command: u32) {
+    if let Some(deferred) = with_app(|app| app.handle_command(command)).flatten() {
+        deferred.run();
+    }
+}
+
+pub fn apply_setting(change: SettingChange) {
+    with_app(|app| app.apply_setting(change));
+}
+
+pub fn preview_style(style_id: &'static str) {
+    with_app(|app| {
+        let context = app.context(crate::time::monotonic_seconds(), true);
+        app.dispatcher.preview(style_id, &context, &app.log);
+        app.set_animating(true);
+    });
+}
+
 fn with_app<R>(f: impl FnOnce(&mut App) -> R) -> Option<R> {
     APP.with(|slot| match slot.try_borrow_mut() {
         Ok(mut borrowed) => borrowed.as_mut().map(f),
@@ -251,6 +284,7 @@ impl App {
 
     fn on_tick(&mut self) {
         let now = crate::time::wall_seconds();
+        self.refresh_popover();
 
         // A wall-clock jump (NTP, a timezone change, the user setting the
         // clock) would otherwise leave a deadline in the far past or future.
@@ -288,6 +322,17 @@ impl App {
         self.deferred = None;
 
         self.dispatch(SchedulerEvent::Tick);
+    }
+
+    /// Push the current countdown into the popover if it is showing. Cheap
+    /// and idempotent; the popover repaints only when the text really changed.
+    fn refresh_popover(&self) {
+        if crate::popover::is_open() {
+            crate::popover::set_status(
+                self.status_line(),
+                matches!(self.state, SchedulerState::Paused { .. }),
+            );
+        }
     }
 
     /// Whether the scheduler's deadline has already passed. Reading the state
@@ -511,6 +556,9 @@ impl App {
             tray::CMD_LAUNCH_AT_LOGIN => {
                 let _ = crate::autostart::set_enabled(!crate::autostart::is_enabled());
             }
+            tray::CMD_SETTINGS => {
+                crate::settings_window::open(&self.settings, crate::autostart::is_enabled());
+            }
             tray::CMD_TELEMETRY => {
                 self.settings.telemetry_enabled = !self.settings.telemetry_enabled;
                 // Order matters on the way off: flip the sink first so the
@@ -561,6 +609,41 @@ impl App {
         }
     }
 
+    fn apply_setting(&mut self, change: SettingChange) {
+        match change {
+            SettingChange::Interval(minutes) => {
+                self.settings.interval_minutes = minutes;
+                self.save();
+                // Re-anchor through the core, never by editing next_fire here.
+                self.dispatch(SchedulerEvent::IntervalChanged);
+                return;
+            }
+            SettingChange::Corner(corner) => {
+                self.settings.set_corner(corner);
+                self.apply_overlay_settings();
+            }
+            SettingChange::Scale(scale) => {
+                self.settings.buddy_scale = scale;
+                self.apply_overlay_settings();
+            }
+            SettingChange::Style(id, on) => self.settings.set_style(id, on),
+            SettingChange::LaunchAtLogin(on) => {
+                let _ = crate::autostart::set_enabled(on);
+                // Not persisted in settings.json: the registry is the truth,
+                // and a cached copy could disagree with it after an uninstall
+                // or a Task Manager veto.
+                return;
+            }
+            SettingChange::Telemetry(on) => {
+                self.settings.telemetry_enabled = on;
+                // Flip the sink before saving, so turning it off cannot slip
+                // one last line into the log the user just silenced.
+                self.log.set_enabled(on);
+            }
+        }
+        self.save();
+    }
+
     fn apply_overlay_settings(&mut self) {
         self.overlay
             .borrow_mut()
@@ -572,6 +655,8 @@ impl App {
     }
 
     fn shutdown(&mut self) {
+        crate::popover::close();
+        crate::settings_window::close();
         self.cancel_performance();
         self.log.log("app_quit", &[]);
     }
@@ -704,12 +789,22 @@ extern "system" fn window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPA
     }
 
     if msg == crate::tray::WM_TRAYICON {
-        // Either button opens the menu. There is no popover on Windows — the
-        // menu carries the status line and every setting (PORTS.md §7).
-        let clicked = matches!(
-            lparam.0 as u32,
-            WM_RBUTTONUP | windows::Win32::UI::WindowsAndMessaging::WM_LBUTTONUP
-        );
+        // Left-click opens the popover — a real window with the buddy in it,
+        // matching the macOS shape. Right-click bypasses it to the quick menu,
+        // exactly as the status item does on macOS.
+        if lparam.0 as u32 == windows::Win32::UI::WindowsAndMessaging::WM_LBUTTONUP {
+            let model = with_app(|app| crate::popover::PopoverModel {
+                status: app.status_line(),
+                is_paused: matches!(app.state, SchedulerState::Paused { .. }),
+                sheet_png: CLASSIC_PNG,
+                sheet_json: CLASSIC_JSON,
+            });
+            if let Some(model) = model {
+                crate::popover::toggle(hwnd, model);
+            }
+            return LRESULT(0);
+        }
+        let clicked = lparam.0 as u32 == WM_RBUTTONUP;
         if clicked {
             // Snapshot the menu state, then DROP the borrow before tracking:
             // TrackPopupMenu pumps messages, and our timers re-enter this proc.

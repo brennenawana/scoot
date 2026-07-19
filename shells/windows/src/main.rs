@@ -17,6 +17,12 @@ mod idle;
 #[cfg(windows)]
 mod nudge;
 #[cfg(windows)]
+mod popover;
+#[cfg(windows)]
+mod settings_window;
+#[cfg(windows)]
+mod ui;
+#[cfg(windows)]
 mod presence;
 #[cfg(windows)]
 mod render;

@@ -57,17 +57,24 @@ cargo build --release -p scoot-windows
   of whatever the user is doing.
 - ✅ `%APPDATA%\Scoot\` is created with `settings.json` and `events.jsonl`;
   the log opens with `app_started` then `scheduler_started`.
-- 🟡 **Right-click the tray icon** → the menu shows the status line, Nudge Now,
-  Pause 1 Hour / Resume, Remind me every ▸, Nudge styles ▸, Buddy ▸, Launch at
-  login, Share anonymous counts, Reveal local event log, Quit Scoot.
-  *Partially verified*: Brennen opened the menu and used **Nudge styles ▸
-  Preview chime** during the M2 session; it routed correctly and logged
-  `nudge_outcome` with `"preview":"true"`. So the menu opens, renders, tracks,
-  and dispatches a command. **The remaining items are still unexercised** —
-  Windows 11's notification area does not expose its buttons through UI
-  Automation, so this cannot be driven from a script. Construction is
-  unit-tested (command-id ranges disjoint, nothing collides with
-  `TrackPopupMenu`'s "nothing chosen" sentinel of 0).
+- ✅ **Left-click the tray icon → the popover**, a real 260pt window: buddy
+  portrait animating at 4fps, the live countdown, Nudge Now / Pause 1 Hour,
+  and a Settings… / Quit footer. Verified open, rendered and captured at
+  390×325 physical (260×217 logical at 150%). It dismisses on deactivate like
+  any system flyout, and clicking Settings… closes it before opening the
+  window behind it.
+- ✅ **Settings… → a real window** (`Scoot Settings`, 420pt), sections Rhythm /
+  Nudge styles / Buddy / System, reading live state correctly. Only one ever
+  exists; asking again raises the existing one.
+- 🟡 **Right-click the tray icon** → the slim quick menu: status line, Nudge
+  Now, Pause 1 Hour / Resume, Settings…, Quit Scoot. Everything configurable
+  now lives in the Settings window, so the menu is verbs only.
+  *Partially verified*: Brennen opened the menu and used a style **Preview**
+  during the M2 session (before the menu was slimmed); it routed correctly and
+  logged `nudge_outcome` with `"preview":"true"`, proving the menu opens,
+  renders, tracks and dispatches. Windows 11's notification area is not
+  exposed through UI Automation, so the menu itself still cannot be driven
+  from a script.
 
 ## 3. Nudge styles (set the interval to "1 minute (testing)")
 
@@ -118,6 +125,31 @@ paths easy to exercise honestly).
 - ⬜ **Display sleep** across a deadline.
 - ⬜ **Pause 1 Hour** → status shows paused; Resume restores. (Reachable only
   through the tray menu — see §2.)
+
+## 4b. The two windows (Layer 1 chrome)
+
+DESIGN.md §1's test is "would this look native inside Settings?". Both windows
+take the shell's own UI font at their own DPI (`SPI_GETNONCLIENTMETRICS`, not a
+hardcoded "Segoe UI"), the user's light/dark choice, a themed title bar via
+`DWMWA_USE_IMMERSIVE_DARK_MODE`, and Windows 11 rounded corners.
+
+- ✅ Dark theme is honoured across the title bar, window background, labels,
+  section headers, and check boxes.
+- ✅ **Push buttons are owner-drawn.** Win32 `BUTTON` controls in pushbutton
+  mode ignore `SetWindowTheme` and stay white on a dark window — the most
+  obvious "ported badly" tell there is. They are drawn here instead: filled
+  rounded rect, hairline border, focus ring in the accent colour.
+- ✅ **Combo box *contents* are owner-drawn**, so the selected value and the
+  dropped list are dark with legible text.
+- ⬜ **Known seam: the combo box frame and drop-down arrow stay light** in dark
+  mode. Owner-draw covers the item area only; the control's frame is painted
+  by the visual style. The documented fix does not exist — Microsoft's dark
+  common controls live behind undocumented `uxtheme` ordinals
+  (`SetPreferredAppMode`), which this shell deliberately does not call. Options
+  if it matters: call the ordinals and accept the risk, or hand-build a
+  dropdown. **Brennen's call**; three combo boxes are affected.
+- ⬜ **Neither window has been seen in light theme.** See the caveat at the top
+  of this file.
 
 ## 5. Overlay behavior
 
