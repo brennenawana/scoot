@@ -41,6 +41,12 @@ pub fn detect(session: SessionType) -> Box<dyn IdleSource> {
             }
             eprintln!("scoot: SCOOT_IDLE_SOURCE=mutter unavailable; falling back to detection");
         }
+        Some("ext-idle-notify") => {
+            if let Some(s) = crate::idle_wayland::WaylandIdle::connect() {
+                return Box::new(s);
+            }
+            eprintln!("scoot: SCOOT_IDLE_SOURCE=ext-idle-notify unavailable; falling back");
+        }
         Some("xscreensaver") => {
             if let Some(s) = XScreenSaverIdle::connect() {
                 return Box::new(s);
@@ -57,11 +63,19 @@ pub fn detect(session: SessionType) -> Box<dyn IdleSource> {
         if let Some(s) = XScreenSaverIdle::connect() {
             return Box::new(s);
         }
+    } else {
+        // Wayland: try the protocol first (wlroots compositors answer it),
+        // then Mutter's DBus monitor, which is what GNOME actually provides.
+        if let Some(s) = crate::idle_wayland::WaylandIdle::connect() {
+            return Box::new(s);
+        }
     }
     if let Some(s) = MutterIdle::connect() {
         return Box::new(s);
     }
     if !x11_first {
+        // Xwayland can still answer MIT-SCREEN-SAVER, but it only sees input
+        // delivered to X clients — a last resort, never a preference.
         if let Some(s) = XScreenSaverIdle::connect() {
             return Box::new(s);
         }

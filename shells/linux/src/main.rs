@@ -23,6 +23,8 @@ mod clock;
 #[cfg(target_os = "linux")]
 mod idle;
 #[cfg(target_os = "linux")]
+mod idle_wayland;
+#[cfg(target_os = "linux")]
 mod nudge;
 #[cfg(target_os = "linux")]
 mod overlay;

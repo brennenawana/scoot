@@ -34,6 +34,7 @@ prints the row it actually detected, so the two can be compared directly.
 |---|---|---|---|
 | Tray (StatusNotifierItem) | ✅ via appindicator extension | ✅ via appindicator extension | ✅ via `xfce4-statusnotifier-plugin` (else none) |
 | Idle clock | ✅ MIT-SCREEN-SAVER | ✅ `org.gnome.Mutter.IdleMonitor` | ✅ MIT-SCREEN-SAVER |
+| ↳ *not* `ext-idle-notify-v1` | n/a | **Mutter 46.2 does not implement it** — see below | n/a |
 | Auto-credit | ✅ | ✅ | ✅ |
 | Buddy overlay | ✅ X11 override-redirect | ❌ **none, by design** | ✅ X11 override-redirect |
 | Chime | ✅ | ✅ | ✅ |
@@ -50,6 +51,29 @@ XFCE X11       session=x11     idle=xscreensaver         overlay=x11-override-re
 
 The GNOME Wayland row is the reprioritized product's *primary* cell: tray +
 chime are the whole nudge there, and that is a design decision, not a gap.
+
+### On `ext-idle-notify-v1`
+
+PORTS.md §8 names this protocol as the Wayland *primary* idle path. It is
+implemented (`src/idle_wayland.rs`) and tried first on any Wayland session,
+but two facts about it need stating plainly:
+
+1. **It does nothing for GNOME.** Mutter 46.2 does not implement the
+   protocol. Inspecting `libmutter-14.so.0.0.0` finds
+   `zwp_idle_inhibit_manager_v1` and `zwp_idle_inhibitor_v1` and no
+   `ext_idle_notifier_v1` at all. GNOME Wayland therefore uses
+   `org.gnome.Mutter.IdleMonitor` over DBus — which §8 also names, and which
+   *is* verified (§3). The protocol's real audience is the wlroots family:
+   sway, Hyprland, river, labwc.
+2. **It is unverified on hardware.** This bench is GNOME, which cannot
+   exercise it, and no wlroots compositor was installed. The module compiles,
+   its bridging logic is unit-tested, and it degrades correctly when the
+   global is absent (forced on X11: falls through to MIT-SCREEN-SAVER in 3s,
+   no hang). But no compositor has ever sent it an `idled` event. **Do not
+   count this cell as covered until someone runs it under sway or Hyprland.**
+
+A capability we claim but have not seen is exactly what the degradation table
+exists to prevent, so it is called out here rather than folded into a ✅.
 
 ## 2. Build & tests
 

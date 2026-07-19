@@ -68,13 +68,16 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       Wayland and XFCE cells (need a coordinated logout on a production box),
       lock/sleep across a deadline, autostart across a re-login, the
       end-to-end auto-credit beat, and the honest-workday exit bar.
-- [ ] **Wayland idle beyond GNOME**: `ext-idle-notify-v1` (PORTS.md §8's
-      Wayland *primary* path) is not implemented. All three acceptance cells
-      are covered by the two sources that are — MIT-SCREEN-SAVER and
-      `org.gnome.Mutter.IdleMonitor` — so no cell regresses, but a wlroots
-      compositor (sway, Hyprland) currently lands on "no idle source →
-      auto-credit disabled + logged". Flagged for Brennen rather than
-      silently absorbed, since the degradation table names it.
+- [x] **`ext-idle-notify-v1`** — built 2026-07-19 at Brennen's call, covering
+      the wlroots family (sway, Hyprland, river, labwc). Worth recording what
+      it does *not* do: Mutter 46.2 has no such global (verified by inspecting
+      `libmutter-14.so.0`), so GNOME Wayland still uses
+      `org.gnome.Mutter.IdleMonitor` and the protocol changes nothing for
+      either must-pass cell.
+- [ ] **Run `ext-idle-notify-v1` against a real wlroots compositor** — the
+      module is unverified on hardware; the GNOME bench cannot exercise it.
+      Unit-tested and it degrades correctly when the global is absent, but no
+      compositor has sent it an `idled` event. Not a covered cell until it has.
 - [ ] **KDE cell** — deferred to polish per PORTS.md §8; needs a VM or an
       install.
 

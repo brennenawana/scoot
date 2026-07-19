@@ -33,6 +33,10 @@ impl fmt::Display for SessionType {
 /// Which clock is answering "how long since the user touched anything".
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IdleSourceKind {
+    /// Wayland `ext-idle-notify-v1`. The protocol PORTS.md §8 names as the
+    /// Wayland primary — in practice a wlroots-family capability, since
+    /// Mutter 46 does not implement it.
+    ExtIdleNotify,
     /// X11 MIT-SCREEN-SAVER extension — the direct analog of macOS's
     /// CGEventSource idle clock.
     XScreenSaver,
@@ -47,6 +51,7 @@ pub enum IdleSourceKind {
 impl fmt::Display for IdleSourceKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
+            Self::ExtIdleNotify => "ext-idle-notify",
             Self::XScreenSaver => "xscreensaver",
             Self::MutterIdleMonitor => "mutter-idle-monitor",
             Self::None => "none",
