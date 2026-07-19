@@ -11,26 +11,54 @@ final class RevealWindowController: NSObject, NSWindowDelegate {
     private var finished = false
     private let onDismiss: () -> Void
 
-    init(outcome: CollectionManager.RollOutcome,
-         manager: CollectionManager,
-         canSkip: Bool,
-         onDismiss: @escaping () -> Void) {
-        self.onDismiss = onDismiss
-        super.init()
-
+    convenience init(outcome: CollectionManager.RollOutcome,
+                     manager: CollectionManager,
+                     canSkip: Bool,
+                     onDismiss: @escaping () -> Void) {
         let ownedIndex: Int? = {
             if case .newBuddy(let index) = outcome.result { return index }
             return nil
         }()
-        let view = RevealView(
+        self.init(
             species: outcome.species,
-            result: outcome.result,
-            sheet: SpriteLibrary.sheet(for: outcome.species),
+            mode: .pull(outcome.result),
             foundLine: "\(manager.foundCount) of \(manager.catalog.species.count) found",
             canSkip: canSkip,
             onName: { name in
                 if let index = ownedIndex { manager.rename(at: index, to: name) }
             },
+            onDismiss: onDismiss
+        )
+    }
+
+    /// Replay: pure theater for an owned buddy, no state touched.
+    convenience init(replay species: Buddy,
+                     givenName: String,
+                     onDismiss: @escaping () -> Void) {
+        self.init(species: species,
+                  mode: .replay(givenName: givenName),
+                  foundLine: "",
+                  canSkip: true,
+                  onName: { _ in },
+                  onDismiss: onDismiss)
+    }
+
+    private init(species: Buddy,
+                 mode: RevealView.Mode,
+                 foundLine: String,
+                 canSkip: Bool,
+                 onName: @escaping (String) -> Void,
+                 onDismiss: @escaping () -> Void) {
+        self.onDismiss = onDismiss
+        super.init()
+
+        let view = RevealView(
+            species: species,
+            mode: mode,
+            sheet: SpriteLibrary.sheet(for: species),
+            foundLine: foundLine,
+            canSkip: canSkip,
+            onName: onName,
             onFinish: { [weak self] in self?.close() }
         )
 

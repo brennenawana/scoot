@@ -24,5 +24,14 @@ protocol NudgeStyle: AnyObject {
 
     /// App quitting or scheduler suspended mid-nudge.
     func cancel()
+
+    /// The scheduler-level movement watcher credited an auto-scoot for the
+    /// current nudge window. A style with a live performance may turn it
+    /// into a celebration beat; everyone else ignores it.
+    func movementCredited()
+}
+
+extension NudgeStyle {
+    func movementCredited() {}
 }
 #endif

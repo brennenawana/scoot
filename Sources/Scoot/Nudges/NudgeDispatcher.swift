@@ -81,5 +81,11 @@ final class NudgeDispatcher {
     func cancelAll() {
         for style in styles { style.cancel() }
     }
+
+    /// Fan-out for a scheduler-level auto-credit (see AppCoordinator): lets a
+    /// live performance (the dancing buddy) become the celebration.
+    func notifyMovementCredited() {
+        for style in styles { style.movementCredited() }
+    }
 }
 #endif

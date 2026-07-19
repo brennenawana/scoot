@@ -71,7 +71,14 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     // MARK: - Clicks
 
     @objc private func statusItemClicked() {
-        if NSApp.currentEvent?.type == .rightMouseUp {
+        // Trust currentEvent only when it's fresh: a synthetic press (AX /
+        // VoiceOver) delivers no event, leaving whatever the user did last —
+        // a stale right-click here used to open the quick menu instead of
+        // the popover, stranding an open menu nobody asked for.
+        let event = NSApp.currentEvent
+        let isFreshRightClick = event?.type == .rightMouseUp
+            && ProcessInfo.processInfo.systemUptime - (event?.timestamp ?? 0) < 0.5
+        if isFreshRightClick {
             showQuickMenu()
         } else {
             togglePopover()

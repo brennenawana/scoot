@@ -4,16 +4,14 @@ import SwiftUI
 import ScootCore
 
 /// The hero nudge: the buddy appears in a screen corner and dances until
-/// clicked (acknowledged), the user demonstrably steps away (movementDetected
-/// — the buddy doubles as the movement sensor), or a timeout passes.
+/// clicked (acknowledged), the scheduler-level movement watcher credits an
+/// auto-scoot (movementCredited — detection lives in AppCoordinator's
+/// MovementWatcher, style-independent), or a timeout passes.
 final class BuddyOverlayNudge: NudgeStyle {
     static let styleID: NudgeStyleID = "buddy-overlay"
 
     let id: NudgeStyleID = BuddyOverlayNudge.styleID
     let displayName = "Buddy drop-in"
-
-    /// Contiguous idle this long after the nudge counts as having moved.
-    private let movementIdleSeconds: TimeInterval = 120
 
     private let settings: SettingsStore
     /// Who performs. The default is the v0.1 classic; a feature can inject
@@ -23,10 +21,8 @@ final class BuddyOverlayNudge: NudgeStyle {
     private let celebrateProvider: () -> SpriteSheet?
     private var panel: OverlayPanel?
     private var completion: ((NudgeOutcome) -> Void)?
-    private var watchTimer: Timer?
     private var timeoutTimer: Timer?
     private var lingerTimer: Timer?
-    private var maxIdleSeen: TimeInterval = 0
 
     init(settings: SettingsStore,
          spriteProvider: @escaping () -> SpriteSheet? = { SpriteSheetLoader.classic },
@@ -47,7 +43,6 @@ final class BuddyOverlayNudge: NudgeStyle {
             return
         }
         self.completion = completion
-        maxIdleSeen = 0
 
         // The one wired experiment (docs/TECHNICAL.md 3f).
         let fps: Double = context.variants[Experiments.buddyDanceFPS.key] == "12fps" ? 12 : 8
@@ -74,12 +69,6 @@ final class BuddyOverlayNudge: NudgeStyle {
         panel.orderFrontRegardless()
         self.panel = panel
 
-        let watch = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
-            self?.checkForMovement()
-        }
-        RunLoop.main.add(watch, forMode: .common)
-        watchTimer = watch
-
         let timeout = Timer.scheduledTimer(withTimeInterval: settings.overlayTimeout,
                                            repeats: false) { [weak self] _ in
             self?.finish(outcome: .timedOut)
@@ -97,12 +86,11 @@ final class BuddyOverlayNudge: NudgeStyle {
         dismiss(outcome: .cancelled)
     }
 
-    private func checkForMovement() {
-        let idle = IdleMonitor.currentIdleSeconds()
-        maxIdleSeen = max(maxIdleSeen, idle)
-        if maxIdleSeen >= movementIdleSeconds && idle < 15 {
-            finish(outcome: .movementDetected)
-        }
+    /// A live performance turns the scheduler's auto-credit into the
+    /// celebration beat ("the buddy is mid-celebration when you get back").
+    func movementCredited() {
+        guard panel != nil, completion != nil else { return }
+        finish(outcome: .movementDetected)
     }
 
     /// Completes the nudge (credit fires immediately) and gives the moment
@@ -110,8 +98,6 @@ final class BuddyOverlayNudge: NudgeStyle {
     /// scoot ("the buddy is mid-celebration when you get back" —
     /// docs/PRODUCT.md §1), a brief slow sway goodbye for a timeout.
     private func finish(outcome: NudgeOutcome) {
-        watchTimer?.invalidate()
-        watchTimer = nil
         timeoutTimer?.invalidate()
         timeoutTimer = nil
         let completion = self.completion
@@ -192,15 +178,12 @@ final class BuddyOverlayNudge: NudgeStyle {
     }
 
     private func dismiss(outcome: NudgeOutcome) {
-        watchTimer?.invalidate()
-        watchTimer = nil
         timeoutTimer?.invalidate()
         timeoutTimer = nil
         lingerTimer?.invalidate()
         lingerTimer = nil
         panel?.orderOut(nil)
         panel = nil
-        maxIdleSeen = 0
         let completion = self.completion
         self.completion = nil
         completion?(outcome)

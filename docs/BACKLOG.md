@@ -28,13 +28,13 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
 
 ## 3. Known v0.2 simplifications (flagged at build time)
 
-- [ ] **Auto-credit is overlay-only**: the idle-watch lives in
-      BuddyOverlayNudge, so chime/wiggle-only users have no movement credit
-      path. Fix: lift the watch to the scheduler/coordinator level so every
-      style auto-credits (PRODUCT.md specifies style-independent auto-credit).
-- [ ] **Reveal replay from the Scootdex** — the design card promises
-      "replayable forever from its dex card"; the shell has no replay
-      affordance. Design/implementation gap.
+- [x] **Auto-credit is overlay-only** — closed 2026-07-18 (v0.3 start):
+      MovementDetector (pure, tested) + coordinator-level MovementWatcher;
+      every style auto-credits, one credit per nudge window, window-edge
+      grace for absences straddling the 15-minute mark.
+- [x] **Reveal replay from the Scootdex** — closed 2026-07-18 (v0.3 start):
+      "Replay reveal" on owned dex detail, pure theater, given name on the
+      plate, no state change.
 - [ ] **Sparks have no sink**: they accumulate toward variant re-rolls /
       accessories that don't exist yet. Fine short-term ("duplicates must
       never feel wasted" is satisfied by the +sparks beat), dishonest
@@ -58,13 +58,17 @@ quiet hours / workday schedule.
 ROADMAP gates v0.3's *verdicts* behind v0.2's attachment evidence, but v0.3's
 *infrastructure* is also the tool that measures a friends round properly. So:
 
-1. Close the two v0.2 gaps that touch real users first: scheduler-level
-   auto-credit, reveal replay from the dex.
+1. ~~Close the two v0.2 gaps that touch real users first~~ — done 2026-07-18.
 2. Build the v0.3 core, core-first and dark: `experiments.json` manifest
    fetcher (static file on GitHub Pages, cached, kill switch; assigner
    unchanged), consent UI, and the daily aggregate uploader behind the
    existing `TelemetryLogging` seam (Cloudflare Worker, counts only,
    toggle-off = zero network). Publish the event schema in the repo.
+   *Progress 2026-07-18: manifest format + validation + version gating +
+   kill switch shipped (ExperimentManifest, tested); local-file loading
+   wired dark in AppCoordinator (drop experiments.json in App Support to
+   exercise it). Still open: the remote fetcher (6h refresh), consent UI,
+   aggregator + uploader, published event schema.*
 3. Run the friends & family round as that infrastructure's first real data —
    it measures the v0.2 exit metric (naming rate) without asking friends for
    screenshots.

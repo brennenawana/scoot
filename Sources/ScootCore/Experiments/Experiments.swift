@@ -17,9 +17,20 @@ public enum Experiments {
 
     public static let active: [ExperimentDefinition] = [buddyDanceFPS]
 
-    public static func snapshot(using assigner: VariantAssigning) -> [ExperimentKey: VariantID] {
+    /// The experiment set for this install: a validated manifest wins;
+    /// no manifest (or an inapplicable one) falls back to the built-ins.
+    /// The assigner never changes — same install, same arms, manifest or not.
+    public static func active(manifest: ExperimentManifest?,
+                              appVersion: String) -> [ExperimentDefinition] {
+        guard let manifest else { return active }
+        let applicable = manifest.applicable(appVersion: appVersion)
+        return applicable.isEmpty ? active : applicable
+    }
+
+    public static func snapshot(using assigner: VariantAssigning,
+                                over experiments: [ExperimentDefinition]? = nil) -> [ExperimentKey: VariantID] {
         var out: [ExperimentKey: VariantID] = [:]
-        for experiment in active {
+        for experiment in experiments ?? active {
             out[experiment.key] = assigner.variant(for: experiment)
         }
         return out

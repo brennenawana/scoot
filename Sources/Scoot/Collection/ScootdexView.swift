@@ -8,6 +8,8 @@ import ScootCore
 /// pulled. No guilt surfaces: nothing here is missed, late, or expiring.
 struct ScootdexView: View {
     @ObservedObject var manager: CollectionManager
+    /// Replays an owned buddy's reveal — pure theater, no state.
+    var onReplay: ((Buddy) -> Void)? = nil
     @State private var selectedID: String?
 
     /// Catalog order with secrets last — whispers sit at the end of the shelf.
@@ -196,6 +198,12 @@ struct ScootdexView: View {
             } else {
                 Button("Put on duty") { manager.setActive(index: index) }
                     .controlSize(.small)
+            }
+            if let onReplay {
+                Button("Replay reveal") { onReplay(species) }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }

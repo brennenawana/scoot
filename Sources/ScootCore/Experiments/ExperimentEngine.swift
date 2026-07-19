@@ -4,7 +4,7 @@ import Foundation
 /// deterministic assignment + a local event log. v0.3 adds the remote manifest
 /// and the consented aggregate uploader behind these same protocols.
 
-public struct ExperimentArm: Equatable {
+public struct ExperimentArm: Codable, Equatable {
     public let id: VariantID
     public let weight: Int
 

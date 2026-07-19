@@ -108,10 +108,26 @@ final class CollectionFeature: NSObject, ScootFeature {
 
     private func openDex() {
         if dex == nil {
-            dex = ScootdexWindowController(manager: manager)
+            dex = ScootdexWindowController(manager: manager,
+                                           onReplay: { [weak self] in self?.startReplay(species: $0) })
             telemetry.log(TelemetryEvent(name: "dex_opened"))
         }
         dex?.show()
+    }
+
+    private func startReplay(species: Buddy) {
+        guard reveal == nil,
+              let index = manager.state.ownedIndex(of: species.id),
+              let owned = manager.state.owned[safe: index] else { return }
+        telemetry.log(TelemetryEvent(name: "reveal_replayed",
+                                     properties: ["species": species.id]))
+        let controller = RevealWindowController(
+            replay: species,
+            givenName: owned.givenName,
+            onDismiss: { [weak self] in self?.reveal = nil }
+        )
+        reveal = controller
+        controller.show()
     }
 
     @objc private func dexSelected() {

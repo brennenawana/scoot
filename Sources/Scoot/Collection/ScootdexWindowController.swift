@@ -1,16 +1,19 @@
 #if canImport(AppKit)
 import AppKit
 import SwiftUI
+import ScootCore
 
 /// The collection window. Content is built on show and dropped on close —
 /// same rule as the popover: a retained NSHostingView keeps the shelf's
 /// TimelineViews ticking forever.
 final class ScootdexWindowController: NSObject, NSWindowDelegate {
     private let manager: CollectionManager
+    private let onReplay: (Buddy) -> Void
     private var window: NSWindow?
 
-    init(manager: CollectionManager) {
+    init(manager: CollectionManager, onReplay: @escaping (Buddy) -> Void) {
         self.manager = manager
+        self.onReplay = onReplay
         super.init()
     }
 
@@ -24,7 +27,8 @@ final class ScootdexWindowController: NSObject, NSWindowDelegate {
             )
             window.title = "Scootdex"
             window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: ScootdexView(manager: manager))
+            window.contentView = NSHostingView(rootView: ScootdexView(manager: manager,
+                                                                      onReplay: onReplay))
             window.center()
             window.delegate = self
             self.window = window

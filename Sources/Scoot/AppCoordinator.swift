@@ -19,6 +19,13 @@ final class AppCoordinator {
     private var systemObserver: SystemStateObserver?
     private var settingsWindow: SettingsWindowController?
     private var sessionNudgeCount = 0
+    // One credit per nudge window, whichever source lands first: the user
+    // clicking the buddy (dispatcher primary outcome) or the style-
+    // independent movement watcher. The watcher survives lock/sleep on
+    // purpose — locking the screen and walking away IS stepping away.
+    private var movementWatcher: MovementWatcher?
+    private var nudgeWindowID = 0
+    private var creditedThisWindow = false
 
     init() {
         let settings = self.settings
@@ -28,6 +35,27 @@ final class AppCoordinator {
                                    idleProvider: { IdleMonitor.currentIdleSeconds() })
         dispatcher = NudgeDispatcher(telemetry: telemetry)
     }
+
+    // v0.3 (dark): experiments come from a locally cached manifest when one
+    // exists — ~/Library/Application Support/Scoot/experiments.json — else
+    // the built-ins. The remote fetcher lands with the uploader; dropping a
+    // file there today exercises the whole path. Fail-safe by construction:
+    // any load/validate error means built-ins.
+    private lazy var activeExperiments: [ExperimentDefinition] = {
+        let url = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Scoot/experiments.json")
+        let appVersion = Bundle.main
+            .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+        guard let data = try? Data(contentsOf: url),
+              let manifest = try? ExperimentManifest.load(from: data) else {
+            return Experiments.active
+        }
+        telemetry.log(TelemetryEvent(name: "experiment_manifest_loaded", properties: [
+            "manifestVersion": String(manifest.version),
+        ]))
+        return Experiments.active(manifest: manifest, appVersion: appVersion)
+    }()
 
     func start() {
         // v0.2: the collection plug-in. Remove this line (and
@@ -85,6 +113,7 @@ final class AppCoordinator {
 
     func shutdown() {
         for feature in features { feature.shutdown() }
+        movementWatcher?.cancel()
         dispatcher.cancelAll()
         scheduler.stop()
         telemetry.log(TelemetryEvent(name: "app_quit"))
@@ -92,16 +121,43 @@ final class AppCoordinator {
 
     private func fireNudge() {
         sessionNudgeCount += 1
+        nudgeWindowID += 1
+        creditedThisWindow = false
+        let window = nudgeWindowID
+
+        movementWatcher?.cancel()
+        let watcher = MovementWatcher(onDetect: { [weak self] in
+            self?.handleOutcome(.movementDetected, window: window)
+        })
+        movementWatcher = watcher
+        watcher.start()
+
         let context = NudgeContext(
             firedAt: Date(),
             interval: TimeInterval(settings.intervalMinutes * 60),
             sessionNudgeCount: sessionNudgeCount,
-            variants: Experiments.snapshot(using: assigner)
+            variants: Experiments.snapshot(using: assigner, over: activeExperiments)
         )
         dispatcher.fire(context: context, enabledIDs: settings.enabledNudgeStyleIDs) { [weak self] outcome in
-            self?.statusController?.celebrate(for: outcome)
-            self?.features.forEach { $0.handlePrimaryOutcome(outcome) }
+            self?.handleOutcome(outcome, window: window)
         }
+    }
+
+    private func handleOutcome(_ outcome: NudgeOutcome, window: Int) {
+        guard window == nudgeWindowID else { return } // a newer nudge owns the stage
+        let creditable = outcome == .acknowledged || outcome == .movementDetected
+        if creditable {
+            guard !creditedThisWindow else { return } // e.g. the overlay echoing the watcher's credit
+            creditedThisWindow = true
+            movementWatcher?.cancel()
+            if outcome == .movementDetected {
+                // Let a live performance become the celebration ("the buddy
+                // is mid-celebration when you get back").
+                dispatcher.notifyMovementCredited()
+            }
+        }
+        statusController?.celebrate(for: outcome)
+        features.forEach { $0.handlePrimaryOutcome(outcome) }
     }
 
     // MARK: - Feature seams

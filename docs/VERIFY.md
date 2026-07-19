@@ -134,8 +134,12 @@ buddy and dex cells answer `AXPress`. SwiftUI text fields need real keystrokes
       buddy's `bondScoots` +1
 - [ ] Second manual credit within 10 min → `scoot_credit_suppressed`, no state
       change (anti-cheese)
-- [ ] Auto-credit: step away ≥2 min after a nudge → `movementDetected` credits
-      (needs real absence — idle can't be faked)
+- [ ] Auto-credit: step away ≥2 min within 15 min of a nudge → `movementDetected`
+      credits (needs real absence — idle can't be faked). Style-independent:
+      works with chime-only (menu bar celebrates) and even after the overlay
+      timed out; a live overlay turns it into the "Saw you step away" beat.
+      Leaving at minute 14 and returning at 20 still counts (window-edge
+      grace, MovementDetectorTests)
 - [ ] 5th scoot mints a ticket (`roll_ticket_earned`); meter resets, ticket
       panel replaces meter in the popover ("2 rolls ready" when stacked)
 - [ ] Day rollover resets `scootsToday`, never the meter
@@ -153,6 +157,15 @@ buddy and dex cells answer `AXPress`. SwiftUI text fields need real keystrokes
 - [ ] Odds footer matches `RarityTier.disclosure` verbatim
 - [ ] Duplicate roll → "+N ✦ sparks" beat (10/20/40/80/160 by rarity), sparks
       balance updates live, ticket still spent, `owned` unchanged
+- [ ] "Replay reveal" on an owned buddy replays the beats with its given name
+      on the plate — no ticket spent, no state change (`reveal_replayed`)
+
+**v0.3 dark infrastructure:**
+- [ ] Drop a valid `experiments.json` into ~/Library/Application Support/Scoot/
+      → next launch logs `experiment_manifest_loaded` and `nudge_fired`
+      carries the manifest's arms; delete it → built-ins return. A corrupt or
+      future-versioned file silently falls back to built-ins (fail-safe)
+- [ ] A `killed: true` experiment vanishes from variants without an update
 
 **Buddy depth (the moment has a beat):**
 - [ ] Clicking the dancing buddy: credit fires instantly, then the buddy does

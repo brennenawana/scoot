@@ -8,8 +8,16 @@ import ScootCore
 /// resolve into sparks at the meet beat. Pixel world on a dimmed stage inside
 /// native window chrome.
 struct RevealView: View {
+    /// A real pull mutates nothing here (already redeemed and saved) but
+    /// flows into naming; a replay is pure theater for a buddy you own —
+    /// same beats, given name on the plate, no naming step.
+    enum Mode {
+        case pull(RedeemResult)
+        case replay(givenName: String)
+    }
+
     let species: Buddy
-    let result: RedeemResult
+    let mode: Mode
     let sheet: SpriteSheet?
     let foundLine: String
     let canSkip: Bool
@@ -27,8 +35,18 @@ struct RevealView: View {
     @FocusState private var nameFocused: Bool
 
     private var isDuplicate: Bool {
-        if case .duplicate = result { return true }
+        if case .pull(.duplicate) = mode { return true }
         return false
+    }
+
+    private var isReplay: Bool {
+        if case .replay = mode { return true }
+        return false
+    }
+
+    private var plateName: String {
+        if case .replay(let givenName) = mode { return givenName }
+        return species.displayName
     }
 
     /// Soft pop + sparkle for the burst beat — the reveal is loud visually,
@@ -111,12 +129,17 @@ struct RevealView: View {
                 }
                 if showPlate {
                     HStack(spacing: 6) {
-                        Text(species.displayName.uppercased())
+                        Text(plateName.uppercased())
                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
                             .tracking(1)
                         species.rarity.badge
                     }
-                    if isDuplicate, case .duplicate(let sparks) = result {
+                    if isReplay {
+                        Text(species.displayName)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    if case .pull(.duplicate(let sparks)) = mode {
                         Text("Duplicate · +\(sparks) ✦ sparks")
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.4))
@@ -131,6 +154,11 @@ struct RevealView: View {
             let plateDelay: UInt64 = species.rarity == .secret ? 900_000_000 : 250_000_000
             try? await Task.sleep(nanoseconds: plateDelay)
             withAnimation(.easeOut(duration: 0.25)) { showPlate = true }
+            if isReplay {
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                onFinish()
+                return
+            }
             guard !isDuplicate else { return }
             try? await Task.sleep(nanoseconds: 1_800_000_000)
             advance(to: .name)
