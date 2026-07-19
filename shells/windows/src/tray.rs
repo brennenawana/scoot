@@ -171,7 +171,28 @@ impl Tray {
     /// taskbar, so this is an add, not a modify.
     pub fn reinstate(&mut self) {
         self.added = false;
+        self.reload_for_current_dpi();
         let _ = self.add();
+    }
+
+    /// Re-pick the art for the tray's current size.
+    ///
+    /// `SM_CXSMICON` changes when the user changes display scaling, and
+    /// dragging the taskbar to a monitor at a different scale changes it too.
+    /// Sampling it only at startup would leave a 16px icon in a 24px slot for
+    /// Explorer to stretch — the runtime rescale PORTS.md §9 forbids outright,
+    /// arriving through the one door this whole art pipeline exists to shut.
+    pub fn reload_for_current_dpi(&mut self) {
+        let wanted = unsafe { GetSystemMetrics(SM_CXSMICON) }.max(16);
+        if self.frames.first().map(|f| f.width as i32) == Some(wanted) {
+            return;
+        }
+        let Ok(frames) = load_frames(wanted) else { return };
+        self.frames = frames;
+        // Force the next set_frame to actually push an icon.
+        let showing = self.current_index;
+        self.current_index = usize::MAX;
+        self.set_frame(showing);
     }
 
     /// Show one of the five beats. A no-op when it is already showing, so the

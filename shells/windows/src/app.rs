@@ -25,8 +25,8 @@ use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::HiDpi::{SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2};
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, KillTimer, PostQuitMessage,
-    RegisterClassW, SetTimer, TranslateMessage, MSG, WM_DESTROY, WM_RBUTTONUP, WM_TIMER,
-    WNDCLASSW, WS_OVERLAPPED,
+    RegisterClassW, SetTimer, TranslateMessage, MSG, WM_DESTROY, WM_DISPLAYCHANGE,
+    WM_DPICHANGED, WM_RBUTTONUP, WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_OVERLAPPED,
 };
 
 use crate::nudge::overlay::{BuddyOverlay, SharedOverlay};
@@ -65,12 +65,32 @@ const CLASSIC_JSON: &[u8] = include_bytes!(concat!(
 /// absence is not rate-limited, because being away is its own proof.
 const MANUAL_CREDIT_COOLDOWN: f64 = 600.0;
 
+/// Cached so `window_proc`'s fall-through path can recognise Explorer's
+/// restart broadcast without borrowing the coordinator. It used to call
+/// `with_app` for *every* unhandled message purely to read this number, which
+/// made the re-entrancy hazard above reachable from ordinary traffic.
+static TASKBAR_CREATED: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
 thread_local! {
     /// The live coordinator. Single-threaded by construction — everything runs
     /// on the message loop — so a thread-local `RefCell` is both sufficient and
     /// honest about that. The one rule: never hold a borrow across a call that
     /// pumps messages (see `tray::show_menu`, which exists to keep that rule).
     static APP: RefCell<Option<App>> = const { RefCell::new(None) };
+}
+
+/// Work a menu command asked for that must not run while the coordinator is
+/// borrowed, because it pumps the message loop and would re-enter us.
+enum Deferred {
+    Reveal(PathBuf),
+}
+
+impl Deferred {
+    fn run(self) {
+        match self {
+            Deferred::Reveal(target) => reveal_in_explorer(&target),
+        }
+    }
 }
 
 /// One nudge's auto-credit observation window.
@@ -141,8 +161,21 @@ pub fn run() -> Result<(), String> {
     Ok(())
 }
 
+/// Run `f` against the coordinator, or do nothing if it is already borrowed.
+///
+/// `try_borrow_mut` rather than `borrow_mut` is a safety property, not
+/// defensive habit. Win32 delivers *sent* messages to this thread whenever it
+/// blocks inside certain calls, which re-enters `window_proc` while an outer
+/// `with_app` is still holding the borrow. `borrow_mut` would panic there, and
+/// a panic unwinding out of an `extern "system"` window procedure is undefined
+/// behaviour. Skipping the re-entrant call is always safe here: every caller
+/// is either a timer that will fire again or a notification that the outer
+/// call is already handling.
 fn with_app<R>(f: impl FnOnce(&mut App) -> R) -> Option<R> {
-    APP.with(|slot| slot.borrow_mut().as_mut().map(f))
+    APP.with(|slot| match slot.try_borrow_mut() {
+        Ok(mut borrowed) => borrowed.as_mut().map(f),
+        Err(_) => None,
+    })
 }
 
 impl App {
@@ -152,6 +185,10 @@ impl App {
         let log = EventLog::new(&dir, settings.telemetry_enabled);
 
         let tray = Rc::new(RefCell::new(Tray::new(hwnd)?));
+        TASKBAR_CREATED.store(
+            tray.borrow().taskbar_created_message(),
+            std::sync::atomic::Ordering::Relaxed,
+        );
         let sheet = SpriteSheet::load(CLASSIC_PNG, CLASSIC_JSON)?;
         let overlay = Rc::new(RefCell::new(BuddyOverlay::new(
             sheet,
@@ -228,12 +265,20 @@ impl App {
         // Deference. Withholding the tick is the whole mechanism — see the
         // module note in `presence`.
         let state = presence::current();
-        if !state.is_free() {
+        if state.defers_nudges() {
             if self.deferred.is_none() {
                 self.deferred = Some((now, state));
-                // Same event name the core uses for an idle hold, so the two
-                // kinds of "not now" aggregate together in metrics.
-                self.log.log("nudge_held", &[("reason", state.reason())]);
+                // Same event name AND the same prop key the core uses for an
+                // idle hold (`detail`, via log_detail), so the two kinds of
+                // "not now" aggregate together across platforms instead of
+                // splitting into two shapes nothing can group.
+                //
+                // Only logged when a nudge was genuinely due: deferring while
+                // the next deadline is still minutes away held nothing back,
+                // and counting it would inflate nudge_held against macOS.
+                if self.nudge_is_due(now) {
+                    self.log.log_detail("nudge_held", state.reason());
+                }
                 // A buddy already dancing when a screen share starts is the
                 // exact failure this feature exists to prevent.
                 self.cancel_performance();
@@ -245,17 +290,27 @@ impl App {
         self.dispatch(SchedulerEvent::Tick);
     }
 
+    /// Whether the scheduler's deadline has already passed. Reading the state
+    /// we already hold, purely to decide whether a telemetry line is
+    /// meaningful — no scheduling decision is made from it.
+    fn nudge_is_due(&self, now: f64) -> bool {
+        matches!(self.state, SchedulerState::Running { next_fire } if now >= next_fire)
+    }
+
     fn fire_nudge(&mut self, now: f64) {
         self.session_nudge_count += 1;
         self.nudge_window_id += 1;
         self.credited_this_window = false;
         self.watch = Some(MovementWatch {
             detector: MovementDetector::default(),
-            started_at: now,
+            // Monotonic: a wall-clock step mid-window would otherwise make
+            // `elapsed` jump or go negative, and CONTRACTS.md §7's window-edge
+            // grace depends on elapsed being a real duration.
+            started_at: crate::time::monotonic_seconds(),
             window_id: self.nudge_window_id,
         });
 
-        let context = self.context(now, false);
+        let context = self.context(crate::time::monotonic_seconds(), false);
         let enabled = self.settings.enabled_nudge_style_ids.clone();
         if let Some(outcome) = self.dispatcher.fire(&context, &enabled, &self.log) {
             self.handle_outcome(outcome.outcome, self.nudge_window_id, now);
@@ -284,9 +339,10 @@ impl App {
     /// screen and walking away *is* stepping away.
     fn sample_movement(&mut self, now: f64) {
         let Some(watch) = self.watch.as_mut() else { return };
-        let verdict = watch
-            .detector
-            .observe(crate::idle::idle_seconds(), now - watch.started_at);
+        let verdict = watch.detector.observe(
+            crate::idle::idle_seconds(),
+            crate::time::monotonic_seconds() - watch.started_at,
+        );
         let window = watch.window_id;
         match verdict {
             Verdict::Watching => {}
@@ -321,6 +377,12 @@ impl App {
                         "scoot_credit_suppressed",
                         &[("reason", "rate_limited"), ("retry_in", &remaining.to_string())],
                     );
+                    // CONTRACTS.md §7: "a manual click consumes the window
+                    // too". The click is spent whether or not it paid out —
+                    // otherwise a rate-limited click leaves the window open and
+                    // a later auto-credit pays for the same nudge.
+                    self.credited_this_window = true;
+                    self.watch = None;
                     return;
                 }
             }
@@ -342,9 +404,15 @@ impl App {
     }
 
     fn on_animate(&mut self) {
-        let now = crate::time::wall_seconds();
-        if let Some(outcome) = self.dispatcher.poll(now, &self.log, false) {
-            self.handle_outcome(outcome.outcome, self.nudge_window_id, now);
+        let now = crate::time::monotonic_seconds();
+        let was_preview = self.dispatcher.is_previewing();
+        if let Some(outcome) = self.dispatcher.poll(now, &self.log) {
+            // A Settings "try it" is theatre. Crediting it would mint a scoot
+            // for a nudge that never fired and burn the user's real
+            // ten-minute cooldown (CONTRACTS.md §7, VERIFY.md §9).
+            if !was_preview {
+                self.handle_outcome(outcome.outcome, self.nudge_window_id, crate::time::wall_seconds());
+            }
         }
         // The overlay is pumped unconditionally: its goodbye beat outlives the
         // outcome, so it is still drawing after the dispatcher has forgotten it.
@@ -374,7 +442,7 @@ impl App {
     }
 
     fn cancel_performance(&mut self) {
-        self.dispatcher.cancel_all();
+        self.dispatcher.cancel_all(&self.log);
         self.overlay.borrow_mut().cancel_now();
         crate::sound::stop_chime();
         self.set_animating(false);
@@ -423,14 +491,23 @@ impl App {
         }
     }
 
-    fn handle_command(&mut self, command: u32) {
+    /// Handle a menu command. Returns work that must happen *outside* the
+    /// coordinator borrow because it pumps messages — see `Deferred`.
+    fn handle_command(&mut self, command: u32) -> Option<Deferred> {
         let now = crate::time::wall_seconds();
         match command {
             tray::CMD_NUDGE_NOW => self.dispatch(SchedulerEvent::UserRequestedNudge),
             tray::CMD_PAUSE => self.dispatch(SchedulerEvent::Paused { duration: Some(3600.0) }),
             tray::CMD_RESUME => self.dispatch(SchedulerEvent::Unpaused),
             tray::CMD_QUIT => unsafe { PostQuitMessage(0) },
-            tray::CMD_REVEAL_LOG => self.reveal_log(),
+            tray::CMD_REVEAL_LOG => {
+                // ShellExecuteW spins a COM/DDE modal loop; running it here
+                // would re-enter window_proc with the coordinator borrowed.
+                let path = self.log.path();
+                let target =
+                    if path.exists() { path.to_path_buf() } else { self.dir.clone() };
+                return Some(Deferred::Reveal(target));
+            }
             tray::CMD_LAUNCH_AT_LOGIN => {
                 let _ = crate::autostart::set_enabled(!crate::autostart::is_enabled());
             }
@@ -444,6 +521,7 @@ impl App {
             }
             _ => self.handle_ranged_command(command, now),
         }
+        None
     }
 
     fn handle_ranged_command(&mut self, command: u32, now: f64) {
@@ -493,30 +571,6 @@ impl App {
         let _ = self.settings.save(&self.dir);
     }
 
-    /// Open the log's folder in Explorer with the file selected. Note this
-    /// never *creates* the file: with telemetry off there is nothing to show,
-    /// and conjuring an empty one would break the zero-writes promise.
-    fn reveal_log(&self) {
-        let path = self.log.path();
-        let target = if path.exists() { path.to_path_buf() } else { self.dir.clone() };
-        let arg: Vec<u16> = format!("/select,\"{}\"", target.display())
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect();
-        let verb: Vec<u16> = "open".encode_utf16().chain(std::iter::once(0)).collect();
-        let exe: Vec<u16> = "explorer.exe".encode_utf16().chain(std::iter::once(0)).collect();
-        unsafe {
-            windows::Win32::UI::Shell::ShellExecuteW(
-                None,
-                PCWSTR(verb.as_ptr()),
-                PCWSTR(exe.as_ptr()),
-                PCWSTR(arg.as_ptr()),
-                PCWSTR::null(),
-                windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL,
-            );
-        }
-    }
-
     fn shutdown(&mut self) {
         self.cancel_performance();
         self.log.log("app_quit", &[]);
@@ -526,6 +580,29 @@ impl App {
 /// Built-in experiments, matching `ScootCore.Experiments.active` exactly. The
 /// manifest can change *which* experiments exist; it can never change how arms
 /// are assigned (PHILOSOPHY.md §4).
+/// Show the log in Explorer with the file selected.
+///
+/// Never *creates* the file: with telemetry off there is nothing to show, and
+/// conjuring an empty one would break the zero-writes promise.
+fn reveal_in_explorer(target: &std::path::Path) {
+    let arg: Vec<u16> = format!("/select,\"{}\"", target.display())
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
+    let verb: Vec<u16> = "open".encode_utf16().chain(std::iter::once(0)).collect();
+    let exe: Vec<u16> = "explorer.exe".encode_utf16().chain(std::iter::once(0)).collect();
+    unsafe {
+        windows::Win32::UI::Shell::ShellExecuteW(
+            None,
+            PCWSTR(verb.as_ptr()),
+            PCWSTR(exe.as_ptr()),
+            PCWSTR(arg.as_ptr()),
+            PCWSTR::null(),
+            windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL,
+        );
+    }
+}
+
 fn built_in_experiments() -> Vec<ExperimentDefinition> {
     vec![ExperimentDefinition {
         key: crate::nudge::EXPERIMENT_DANCE_FPS.to_string(),
@@ -609,6 +686,13 @@ extern "system" fn window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPA
         }
     }
 
+    // Display scaling or layout changed: the tray slot may be a different
+    // number of pixels now.
+    if msg == WM_DPICHANGED || msg == WM_DISPLAYCHANGE || msg == WM_SETTINGCHANGE {
+        with_app(|app| app.tray.borrow_mut().reload_for_current_dpi());
+        // Fall through to DefWindowProc as well — these are not ours to eat.
+    }
+
     if msg == WM_DESTROY {
         unsafe { PostQuitMessage(0) };
         return LRESULT(0);
@@ -648,7 +732,10 @@ extern "system" fn window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPA
                     styles,
                 };
                 if let Some(command) = tray::show_menu(hwnd, &state) {
-                    with_app(|app| app.handle_command(command));
+                    // The borrow is released before the deferred action runs.
+                    if let Some(deferred) = with_app(|app| app.handle_command(command)).flatten() {
+                        deferred.run();
+                    }
                 }
             }
         }
@@ -656,8 +743,7 @@ extern "system" fn window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPA
     }
 
     // Explorer restarted and took every tray icon with it.
-    let taskbar_created =
-        with_app(|app| app.tray.borrow().taskbar_created_message()).unwrap_or(0);
+    let taskbar_created = TASKBAR_CREATED.load(std::sync::atomic::Ordering::Relaxed);
     if taskbar_created != 0 && msg == taskbar_created {
         with_app(|app| app.tray.borrow_mut().reinstate());
         return LRESULT(0);

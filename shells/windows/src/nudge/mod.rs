@@ -140,6 +140,15 @@ pub struct Dispatcher {
     styles: Vec<Box<dyn NudgeStyle>>,
     live: Vec<LiveStyle>,
     primary: Option<&'static str>,
+    /// Whether the live performance is a Settings "try it".
+    ///
+    /// This has to live here rather than being passed to `poll`, because the
+    /// outcome arrives on a later pump than the fire and the caller has no way
+    /// to know which performance it belongs to. Without it a clicked preview
+    /// walks into the credit arbiter and mints a real scoot — the macOS
+    /// dispatcher avoids that structurally by giving previews their own
+    /// completion closure that never reaches the coordinator.
+    previewing: bool,
 }
 
 struct LiveStyle {
@@ -164,7 +173,7 @@ impl Default for Dispatcher {
 
 impl Dispatcher {
     pub fn new() -> Self {
-        Self { styles: Vec::new(), live: Vec::new(), primary: None }
+        Self { styles: Vec::new(), live: Vec::new(), primary: None, previewing: false }
     }
 
     pub fn register(&mut self, mut style: Box<dyn NudgeStyle>) {
@@ -180,6 +189,12 @@ impl Dispatcher {
         !self.live.is_empty()
     }
 
+    /// True while the live performance is a preview, so the coordinator can
+    /// drop its outcome instead of crediting it.
+    pub fn is_previewing(&self) -> bool {
+        self.previewing
+    }
+
     /// Fire every enabled style. Returns an immediate outcome only when
     /// nothing is left performing — otherwise the coordinator waits for
     /// `poll`.
@@ -190,7 +205,8 @@ impl Dispatcher {
         log: &EventLog,
     ) -> Option<StyleOutcome> {
         // A new nudge always takes the stage from an older one.
-        self.cancel_all();
+        self.cancel_all(log);
+        self.previewing = context.is_preview;
 
         // Registration order, not settings order — the settings array records
         // what the user enabled, never the sequence styles run in.
@@ -252,7 +268,8 @@ impl Dispatcher {
 
     /// Pump every live style. Returns the primary's outcome if it finished on
     /// this pump — the coordinator credits from that and nothing else.
-    pub fn poll(&mut self, now: f64, log: &EventLog, is_preview: bool) -> Option<StyleOutcome> {
+    pub fn poll(&mut self, now: f64, log: &EventLog) -> Option<StyleOutcome> {
+        let is_preview = self.previewing;
         let mut primary_outcome = None;
         let mut finished = Vec::new();
         for (slot, live) in self.live.iter().enumerate() {
@@ -270,11 +287,18 @@ impl Dispatcher {
         primary_outcome
     }
 
-    pub fn cancel_all(&mut self) {
+    /// Tear the stage down, recording `Cancelled` for whatever was still
+    /// performing. Every `nudge_fired` must be answerable by a matching
+    /// `nudge_outcome`, or a suspend mid-nudge leaves a fired nudge that never
+    /// resolved and the two event streams stop reconciling.
+    pub fn cancel_all(&mut self, log: &EventLog) {
+        let was_preview = self.previewing;
         for live in std::mem::take(&mut self.live) {
             self.styles[live.index].cancel();
+            self.record(log, live.id, NudgeOutcome::Cancelled, live.is_primary, was_preview);
         }
         self.primary = None;
+        self.previewing = false;
     }
 
     pub fn notify_movement_credited(&mut self) {
@@ -283,9 +307,13 @@ impl Dispatcher {
         }
     }
 
-    /// Fire a single style for the Settings "try it" affordance. Previews
-    /// credit nothing — the coordinator drops their outcomes on the floor.
+    /// Fire a single style for the Settings "try it" affordance.
+    ///
+    /// Previews credit nothing. `context.is_preview` must be true — `fire`
+    /// latches it into `previewing` for the whole performance, and the
+    /// coordinator checks `is_previewing()` before crediting.
     pub fn preview(&mut self, style_id: &str, context: &NudgeContext, log: &EventLog) {
+        debug_assert!(context.is_preview, "preview() needs a preview context");
         let enabled = vec![style_id.to_string()];
         let _ = self.fire(context, &enabled, log);
     }
@@ -423,7 +451,7 @@ mod tests {
         let (mut d, _, _, _, log, dir) = harness("the_buddy_is_primary_whenever_it_is_enabled");
         let enabled = vec![STYLE_SOUND.to_string(), STYLE_BUDDY_OVERLAY.to_string()];
         assert!(d.fire(&ctx(), &enabled, &log).is_none(), "buddy is still live");
-        let out = d.poll(10.0, &log, false).expect("primary finished");
+        let out = d.poll(10.0, &log).expect("primary finished");
         assert_eq!(out.id, STYLE_BUDDY_OVERLAY);
         assert_eq!(out.outcome, NudgeOutcome::Acknowledged);
         std::fs::remove_dir_all(&dir).ok();
@@ -454,11 +482,11 @@ mod tests {
         let enabled = vec![STYLE_BUDDY_OVERLAY.to_string(), STYLE_ICON_BOUNCE.to_string()];
         d.fire(&ctx(), &enabled, &log);
         // Bounce finishes first; it is not primary, so nothing surfaces.
-        assert!(d.poll(3.0, &log, false).is_none());
+        assert!(d.poll(3.0, &log).is_none());
         // Buddy finishes; that one counts.
-        assert!(d.poll(10.0, &log, false).is_some());
+        assert!(d.poll(10.0, &log).is_some());
         // Nothing left to report, ever.
-        assert!(d.poll(99.0, &log, false).is_none());
+        assert!(d.poll(99.0, &log).is_none());
         std::fs::remove_dir_all(&dir).ok();
     }
 
@@ -477,7 +505,7 @@ mod tests {
         let (mut d, _, cancels, _, log, dir) = harness("cancel_all_clears_the_stage");
         d.fire(&ctx(), &[STYLE_BUDDY_OVERLAY.to_string()], &log);
         assert!(d.is_performing());
-        d.cancel_all();
+        d.cancel_all(&log);
         assert!(!d.is_performing());
         assert_eq!(*cancels.borrow(), vec![STYLE_BUDDY_OVERLAY]);
         std::fs::remove_dir_all(&dir).ok();
@@ -497,7 +525,7 @@ mod tests {
     fn telemetry_records_a_fire_and_one_outcome_line_per_style() {
         let (mut d, _, _, _, log, dir) = harness("telemetry_records_a_fire_and_one_outcome_line_per_style");
         d.fire(&ctx(), &[STYLE_BUDDY_OVERLAY.to_string(), STYLE_SOUND.to_string()], &log);
-        d.poll(10.0, &log, false);
+        d.poll(10.0, &log);
         let text = std::fs::read_to_string(log.path()).unwrap();
         let names: Vec<&str> = text.lines().collect();
         assert_eq!(names.len(), 3, "expected nudge_fired + two nudge_outcome: {text}");
@@ -506,6 +534,51 @@ mod tests {
         assert!(text.contains("\"style\":\"buddy-overlay\""));
         assert!(text.contains("\"primary\":\"true\""));
         assert!(text.contains("\"primary\":\"false\""));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_preview_is_flagged_for_the_whole_performance() {
+        // The bug: preview-ness was passed to poll() by the caller, which has
+        // no way to know which performance an outcome belongs to. A clicked
+        // preview then walked into the credit arbiter and minted a real scoot.
+        let (mut d, _, _, _, log, dir) = harness("a_preview_is_flagged_for_the_whole_performance");
+        let mut c = ctx();
+        c.is_preview = true;
+        d.preview(STYLE_BUDDY_OVERLAY, &c, &log);
+        assert!(d.is_previewing(), "the live performance is a preview");
+        // Still a preview when the outcome lands one pump later.
+        let out = d.poll(10.0, &log).expect("primary finished");
+        assert_eq!(out.outcome, NudgeOutcome::Acknowledged);
+        assert!(d.is_previewing(), "flag must survive until the stage clears");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_real_nudge_is_not_flagged_as_a_preview() {
+        let (mut d, _, _, _, log, dir) = harness("a_real_nudge_is_not_flagged_as_a_preview");
+        let mut c = ctx();
+        c.is_preview = true;
+        d.preview(STYLE_SOUND, &c, &log);
+        // A genuine nudge afterwards must clear the flag.
+        d.fire(&ctx(), &[STYLE_BUDDY_OVERLAY.to_string()], &log);
+        assert!(!d.is_previewing());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn cancelling_records_an_outcome_for_every_live_style() {
+        // Every nudge_fired must be answerable by a nudge_outcome, or a
+        // suspend mid-nudge leaves a fired nudge that never resolved.
+        let (mut d, _, _, _, log, dir) = harness("cancelling_records_an_outcome_for_every_live_style");
+        d.fire(&ctx(), &[STYLE_BUDDY_OVERLAY.to_string(), STYLE_ICON_BOUNCE.to_string()], &log);
+        d.cancel_all(&log);
+        let text = std::fs::read_to_string(log.path()).unwrap();
+        assert_eq!(
+            text.matches("\"cancelled\"").count(),
+            2,
+            "both live styles should report cancelled: {text}"
+        );
         std::fs::remove_dir_all(&dir).ok();
     }
 

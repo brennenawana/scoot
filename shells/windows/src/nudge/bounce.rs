@@ -8,7 +8,9 @@ use crate::tray::{Tray, FRAME_CALM, FRAME_COUNT};
 
 use super::{NudgeContext, NudgeOutcome, NudgeStyle};
 
-/// Matches the macOS `IconBounceNudge.burstDuration`.
+/// Matches the macOS `IconBounceNudge.burstDuration`. Measured against the
+/// monotonic clock the dispatcher pumps with, so a wall-clock correction
+/// cannot strand the icon mid-hop.
 const BURST_SECONDS: f64 = 2.4;
 /// Four bounce beats read as a hop at roughly this rate.
 const BOUNCE_FPS: f64 = 10.0;

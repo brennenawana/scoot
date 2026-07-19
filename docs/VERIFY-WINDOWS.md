@@ -12,8 +12,17 @@ PowerShell: enumerate the process's top-level windows, watch the
 back. The log is the evidence; the UI is only how the log gets written.
 
 **Status legend**: ✅ verified by machine in the M2 session (2026-07-19,
-Windows 11 Pro 26200, 150% display scaling) · 🧪 covered by automated tests
-only · ⬜ **UNVERIFIED — needs a human**, handed to Brennen.
+Windows 11 Pro 26200, 150% display scaling) · 🟡 partially verified · 🧪
+covered by automated tests only · ⬜ **UNVERIFIED — needs a human**, handed to
+Brennen.
+
+> **A caveat this checklist earned the hard way.** The first M2 verification
+> pass ran entirely on a **dark-theme** desktop and reported the overlay clean.
+> A later review found that the speech bubble's rounded corners were being
+> painted solid black — an artifact that is nearly invisible against a dark
+> bubble and glaring against a light one. Anything visual below should be
+> re-checked in **both** themes before it is believed; a single-theme pass is
+> not evidence about the other theme.
 
 ## 0. Prerequisites
 
@@ -31,7 +40,7 @@ cargo build --release -p scoot-windows
 ```
 
 - ✅ `cargo test --workspace` green: **8 golden-vector conformance tests, 3
-  mirrored property tests, 129 shell tests**
+  mirrored property tests, 139 shell tests**
 - ✅ Release binary is a **single static exe, 646 KB**, no runtime to
   distribute. Sprites, the chime, and every tray icon are `include_bytes!`-ed
   in, so there is no asset directory to lose.
@@ -48,15 +57,17 @@ cargo build --release -p scoot-windows
   of whatever the user is doing.
 - ✅ `%APPDATA%\Scoot\` is created with `settings.json` and `events.jsonl`;
   the log opens with `app_started` then `scheduler_started`.
-- ⬜ **Right-click the tray icon** → the menu shows the status line, Nudge Now,
+- 🟡 **Right-click the tray icon** → the menu shows the status line, Nudge Now,
   Pause 1 Hour / Resume, Remind me every ▸, Nudge styles ▸, Buddy ▸, Launch at
-  login, Share anonymous counts, Reveal local event log, Quit Scoot. Every item
-  does what it says.
-  *Not machine-verified*: Windows 11's notification area does not expose its
-  buttons reliably through UI Automation, so the menu was never clicked
-  end-to-end. Its construction is unit-tested (command-id ranges are disjoint,
-  no id collides with `TrackPopupMenu`'s "nothing chosen" sentinel of 0) but
-  the *interaction* is unproven. **This is the largest untested surface in M2.**
+  login, Share anonymous counts, Reveal local event log, Quit Scoot.
+  *Partially verified*: Brennen opened the menu and used **Nudge styles ▸
+  Preview chime** during the M2 session; it routed correctly and logged
+  `nudge_outcome` with `"preview":"true"`. So the menu opens, renders, tracks,
+  and dispatches a command. **The remaining items are still unexercised** —
+  Windows 11's notification area does not expose its buttons through UI
+  Automation, so this cannot be driven from a script. Construction is
+  unit-tested (command-id ranges disjoint, nothing collides with
+  `TrackPopupMenu`'s "nothing chosen" sentinel of 0).
 
 ## 3. Nudge styles (set the interval to "1 minute (testing)")
 
@@ -124,13 +135,21 @@ paths easy to exercise honestly).
   numbers and `scale_nearest` replicates pixels, with a test asserting a scaled
   frame contains **only colours present in the source** (an interpolating
   scaler would invent intermediate values).
-- ✅ **Alpha compositing is correct** — screenshot shows hard pixel edges, no
-  pale halo, and no black box behind the text. The bubble is drawn into the DIB,
-  GDI writes the glyphs, and the pill's alpha is restored afterwards, because
-  GDI text leaves the alpha byte untouched and would otherwise render invisible
-  in a premultiplied layered window.
+- ✅ **Alpha compositing is correct** — hard pixel edges, no pale halo, no black
+  box behind the text, and **rounded bubble corners that are genuinely
+  transparent**. The bubble is drawn into the DIB, GDI writes the glyphs, and
+  the pill's alpha is restored afterwards (GDI text leaves the alpha byte
+  untouched and would otherwise render invisible in a premultiplied layered
+  window) — but the restore is masked to the *rounded* shape. Measured on the
+  composited desktop: corner pixels RGB(24,24,24), i.e. the desktop showing
+  through; pill body RGB(41,41,44), i.e. the dark bubble at alpha 235.
+  Repairing the bounding box instead put four solid-black notches there, which
+  is the bug the dark-theme caveat at the top of this file refers to.
 - ✅ **Theme-aware chrome**: dark-mode desktop produced the dark bubble
   (DESIGN.md §1's "invisible-native" layer).
+- ⬜ **The same overlay on a light-theme desktop.** The corner fix is verified
+  by measurement and by unit test, and it is theme-independent by construction
+  — but nobody has looked at the light bubble. Worth one glance.
 - ⬜ **Multi-monitor**: the buddy should appear on the display holding the
   mouse, inside that monitor's work area, at that monitor's DPI. Single-display
   machine — needs a second monitor, ideally at a different scale factor.
@@ -181,6 +200,11 @@ one" reached without inventing a state or touching a golden vector.
   comes back. The `TaskbarCreated` broadcast is handled and the coordinator
   deliberately uses a real top-level window rather than a message-only one
   precisely so it receives that broadcast — but this was not exercised.
+- ✅ **Graceful quit**: posting `WM_CLOSE` to the coordinator window (the path
+  a menu Quit takes) logged `app_quit`, unwound the message loop, dropped the
+  coordinator, removed the tray icon via `Drop`, and exited cleanly. A forced
+  kill naturally skips all of that and orphans the tray icon until the shell
+  reaps it — which is why quitting is a real code path and not just `exit()`.
 
 ## 8. A full honest day
 

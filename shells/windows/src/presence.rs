@@ -69,6 +69,30 @@ impl Presence {
         matches!(self, Presence::Free | Presence::Unknown)
     }
 
+    /// Whether this state should make the shell withhold ticks from the core.
+    ///
+    /// Note `NotPresent` is deliberately absent. It is the one QUNS state that
+    /// means the user is *away* — locked screen or screensaver — and that is
+    /// exactly the situation CONTRACTS.md §6's hold-and-reset machinery exists
+    /// to handle. Withholding ticks there would suppress the very judgment we
+    /// want: no nudge at an empty desk, and a fresh interval after a long
+    /// absence. Lock is already reported separately and precisely, through
+    /// WTS_SESSION_LOCK, so the core hears about it as a `Suspended` event
+    /// rather than as silence.
+    ///
+    /// Deference is for the opposite case: the user is right there, and that
+    /// is the problem.
+    pub fn defers_nudges(self) -> bool {
+        matches!(
+            self,
+            Presence::Busy
+                | Presence::FullScreenD3D
+                | Presence::Presenting
+                | Presence::QuietTime
+                | Presence::FullScreenApp
+        )
+    }
+
     /// Telemetry detail. Shared vocabulary, snake_case like the event names.
     pub fn reason(self) -> &'static str {
         match self {
@@ -105,6 +129,28 @@ pub fn current() -> Presence {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_absent_user_is_the_core_s_business_not_the_shell_s() {
+        // Locked or screensavering means away, and the core's hold/reset rules
+        // must get to run. Deferring there would silence them.
+        assert!(!Presence::NotPresent.defers_nudges());
+        assert!(!Presence::Free.defers_nudges());
+        assert!(!Presence::Unknown.defers_nudges());
+    }
+
+    #[test]
+    fn the_user_is_present_but_busy_states_defer() {
+        for busy in [
+            Presence::Busy,
+            Presence::FullScreenD3D,
+            Presence::Presenting,
+            Presence::QuietTime,
+            Presence::FullScreenApp,
+        ] {
+            assert!(busy.defers_nudges(), "{busy:?} should defer");
+        }
+    }
 
     #[test]
     fn only_an_explicit_yes_lets_a_nudge_through() {

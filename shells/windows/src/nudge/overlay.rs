@@ -29,7 +29,7 @@ use windows::Win32::Graphics::Gdi::{
     CLIP_DEFAULT_PRECIS, DEFAULT_CHARSET, DT_CENTER, DT_SINGLELINE, DT_VCENTER, FF_DONTCARE,
     FW_SEMIBOLD, HDC, MONITORINFO, MONITOR_DEFAULTTONEAREST, OUT_DEFAULT_PRECIS, TRANSPARENT,
 };
-use windows::Win32::UI::HiDpi::GetDpiForWindow;
+use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, RegisterClassW, SetWindowPos,
     ShowWindow, UpdateLayeredWindow, HWND_TOPMOST, IDC_ARROW, LWA_ALPHA, SWP_NOACTIVATE,
@@ -79,11 +79,26 @@ pub struct BuddyOverlay {
     stage: Stage,
     corner: OverlayCorner,
     logical_scale: i32,
+    /// An outcome decided outside `poll` and owed to the dispatcher.
+    ///
+    /// `movement_credited` is called by the coordinator, not by the pump, so
+    /// it cannot return an outcome directly. Parking it here lets the next
+    /// `poll` deliver it — without which the style stays in the dispatcher's
+    /// live set forever, the 66ms timer never stops, and the nudge window
+    /// never gets its `nudge_outcome` line.
+    pending: Option<NudgeOutcome>,
+    /// The monitor rect chosen when the nudge fired. Resolved once so the
+    /// buddy cannot teleport to another display if the mouse wanders
+    /// mid-dance.
+    stage_monitor: Option<(RECT, u32)>,
 }
 
 impl BuddyOverlay {
     pub fn new(sheet: SpriteSheet, corner: OverlayCorner, logical_scale: i32) -> Self {
-        Self { sheet, hwnd: None, stage: Stage::Hidden, corner, logical_scale }
+        Self {
+            sheet, hwnd: None, stage: Stage::Hidden, corner, logical_scale,
+            pending: None, stage_monitor: None,
+        }
     }
 
     /// Settings changed under us; the next nudge uses the new placement.
@@ -146,7 +161,12 @@ impl BuddyOverlay {
             },
         };
 
-        let dpi = unsafe { GetDpiForWindow(hwnd) }.max(96);
+        // Both the scale and the placement come from the monitor resolved at
+        // fire time. Asking the window itself is wrong on the first frame: it
+        // was just created at (0,0) with size 0x0, so GetDpiForWindow reports
+        // whichever monitor owns that point, not the one the buddy will
+        // appear on.
+        let (work, dpi) = self.stage_monitor.unwrap_or_else(monitor_under_cursor);
         let scale = integer_scale_for(frame.width, self.logical_scale as u32, dpi);
         let sprite = scale_nearest(frame, scale);
 
@@ -154,7 +174,7 @@ impl BuddyOverlay {
             Ok(canvas) => canvas,
             Err(_) => return,
         };
-        let origin = corner_origin(canvas.width as i32, canvas.height as i32, self.corner, dpi);
+        let origin = corner_origin(canvas.width as i32, canvas.height as i32, self.corner, dpi, work);
         let _ = present(hwnd, &canvas, origin, message);
     }
 
@@ -217,12 +237,20 @@ impl NudgeStyle for BuddyOverlay {
 
     fn fire(&mut self, context: &NudgeContext) -> Option<NudgeOutcome> {
         CLICKED.store(false, std::sync::atomic::Ordering::Relaxed);
+        self.pending = None;
+        // Pick the display once, here, from where the mouse is now.
+        self.stage_monitor = Some(monitor_under_cursor());
         self.stage = Stage::Dancing { since: context.fired_at, fps: context.dance_fps() };
         self.animate(context.fired_at);
         None
     }
 
     fn poll(&mut self, now: f64) -> Option<NudgeOutcome> {
+        // An auto-credit already moved us to the goodbye beat; hand the
+        // dispatcher the outcome it is still waiting for.
+        if let Some(outcome) = self.pending.take() {
+            return Some(outcome);
+        }
         let Stage::Dancing { since, .. } = self.stage else { return None };
         if CLICKED.swap(false, std::sync::atomic::Ordering::Relaxed) {
             self.begin_linger(now, NudgeOutcome::Acknowledged);
@@ -236,6 +264,7 @@ impl NudgeStyle for BuddyOverlay {
     }
 
     fn cancel(&mut self) {
+        self.pending = None;
         self.hide();
     }
 
@@ -243,8 +272,9 @@ impl NudgeStyle for BuddyOverlay {
         if let Stage::Dancing { .. } = self.stage {
             // The coordinator has already credited; this is the "Saw you step
             // away" beat the user comes back to.
-            let now = crate::time::wall_seconds();
+            let now = crate::time::monotonic_seconds();
             self.begin_linger(now, NudgeOutcome::MovementDetected);
+            self.pending = Some(NudgeOutcome::MovementDetected);
         }
     }
 }
@@ -299,6 +329,9 @@ pub fn scale_nearest(frame: &Frame, scale: u32) -> Frame {
 struct Composed {
     frame: Frame,
     bubble: Option<RECT>,
+    /// The corner radius the pill was filled with. Needed again at repair
+    /// time so the alpha fix follows the same shape the fill did.
+    bubble_radius: i32,
     font_px: i32,
 }
 
@@ -341,12 +374,13 @@ fn compose(sprite: &Frame, message: Option<&str>, dpi: u32) -> Result<Composed, 
         rgba: vec![0; (width * height * 4) as usize],
     };
 
+    let radius = bubble_h / 2;
     let bubble = message.map(|_| {
         // Centred horizontally; integral origin, so the pill never lands on a
         // half pixel.
         let left = (width - bubble_w) / 2;
         let rect = RECT { left, top: 0, right: left + bubble_w, bottom: bubble_h };
-        fill_rounded_rect(&mut canvas, rect, bubble_h / 2, bubble_colors(dpi).0);
+        fill_rounded_rect(&mut canvas, rect, radius, bubble_colors(dpi).0);
         rect
     });
 
@@ -354,7 +388,7 @@ fn compose(sprite: &Frame, message: Option<&str>, dpi: u32) -> Result<Composed, 
     let sprite_x = (width - sprite.width as i32) / 2;
     blit(&mut canvas, sprite, sprite_x, bubble_h + gap);
 
-    Ok(Composed { frame: canvas, bubble, font_px })
+    Ok(Composed { frame: canvas, bubble, bubble_radius: radius, font_px })
 }
 
 /// Light and dark bubble colours, following the system theme so the chrome
@@ -423,7 +457,9 @@ fn blit(canvas: &mut Frame, src: &Frame, ox: i32, oy: i32) {
 
 /// Place the window in the chosen corner of the monitor the mouse is on,
 /// inside the work area so it never sits under the taskbar.
-fn corner_origin(width: i32, height: i32, corner: OverlayCorner, dpi: u32) -> POINT {
+/// The work area and DPI of the monitor the mouse is on. Resolved once per
+/// nudge; see `BuddyOverlay::stage_monitor`.
+fn monitor_under_cursor() -> (RECT, u32) {
     let mut cursor = POINT::default();
     unsafe { let _ = GetCursorPos(&mut cursor); }
     let monitor = unsafe { MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST) };
@@ -436,7 +472,27 @@ fn corner_origin(width: i32, height: i32, corner: OverlayCorner, dpi: u32) -> PO
     } else {
         RECT { left: 0, top: 0, right: 1920, bottom: 1080 }
     };
+    let mut dpi_x = 96u32;
+    let mut dpi_y = 96u32;
+    let dpi = if unsafe {
+        GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y)
+    }
+    .is_ok()
+    {
+        dpi_x.max(96)
+    } else {
+        96
+    };
+    (work, dpi)
+}
 
+fn corner_origin(
+    width: i32,
+    height: i32,
+    corner: OverlayCorner,
+    dpi: u32,
+    work: RECT,
+) -> POINT {
     let margin = (CORNER_MARGIN * dpi as i32 / 96).max(1);
     let (x, y) = match corner {
         OverlayCorner::BottomRight => (work.right - width - margin, work.bottom - height - margin),
@@ -468,7 +524,8 @@ fn present(
         // across the pill is both correct and the simplest repair. It has to
         // happen after the text lands, and after any GDI call that touched
         // these pixels — hence here rather than in `compose`.
-        dib.force_opaque(rect);
+        let radius = canvas.bubble_radius;
+        dib.force_opaque_where(rect, |x, y| inside_rounded(rect, radius, x, y));
     }
 
     let size = SIZE { cx: canvas.width as i32, cy: canvas.height as i32 };
@@ -708,6 +765,63 @@ mod tests {
         let src = frame(8, 8);
         blit(&mut canvas, &src, -2, -2);
         blit(&mut canvas, &src, 3, 3);
+    }
+
+    #[test]
+    fn an_auto_credit_surfaces_an_outcome_on_the_next_poll() {
+        // The bug this guards: movement_credited() moved the stage to
+        // Lingering, but poll() only reported from Dancing — so the style was
+        // never removed from the dispatcher's live set. The 66ms animation
+        // timer then ran until the next nudge, and the window never got its
+        // nudge_outcome line.
+        let sheet = SpriteSheet::load(
+            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+                "/../../Sources/Scoot/Resources/Sprites/buddy-classic.png")),
+            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+                "/../../Sources/Scoot/Resources/Sprites/buddy-classic.json")),
+        )
+        .expect("classic sheet");
+        let mut overlay = BuddyOverlay::new(sheet, OverlayCorner::BottomRight, 3);
+        overlay.stage = Stage::Dancing { since: 0.0, fps: 8.0 };
+
+        overlay.movement_credited();
+        assert_eq!(
+            overlay.poll(1.0),
+            Some(NudgeOutcome::MovementDetected),
+            "the credit must reach the dispatcher"
+        );
+        assert_eq!(overlay.poll(2.0), None, "and only once");
+    }
+
+    #[test]
+    fn a_cancel_drops_any_owed_outcome() {
+        let sheet = SpriteSheet::load(
+            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+                "/../../Sources/Scoot/Resources/Sprites/buddy-classic.png")),
+            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),
+                "/../../Sources/Scoot/Resources/Sprites/buddy-classic.json")),
+        )
+        .expect("classic sheet");
+        let mut overlay = BuddyOverlay::new(sheet, OverlayCorner::BottomRight, 3);
+        overlay.stage = Stage::Dancing { since: 0.0, fps: 8.0 };
+        overlay.movement_credited();
+        overlay.cancel();
+        assert_eq!(overlay.poll(1.0), None, "a cancelled nudge owes nothing");
+    }
+
+    #[test]
+    fn the_pill_corners_stay_transparent() {
+        // Same bug as dib's mask test, asserted through the predicate the
+        // overlay actually uses: the wedges outside the rounded corners must
+        // not be considered part of the pill.
+        let rect = RECT { left: 0, top: 0, right: 40, bottom: 20 };
+        let radius = 10;
+        assert!(!inside_rounded(rect, radius, 0, 0), "top-left wedge");
+        assert!(!inside_rounded(rect, radius, 39, 0), "top-right wedge");
+        assert!(!inside_rounded(rect, radius, 0, 19), "bottom-left wedge");
+        assert!(!inside_rounded(rect, radius, 39, 19), "bottom-right wedge");
+        assert!(inside_rounded(rect, radius, 20, 10), "the middle is the pill");
+        assert!(inside_rounded(rect, radius, 20, 0), "the top edge is the pill");
     }
 
     #[test]

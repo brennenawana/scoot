@@ -82,15 +82,27 @@ impl Dib {
         Ok(dib)
     }
 
-    /// Force full alpha across a rectangle.
+    /// Force full alpha across the pixels of `rect` that `keep` accepts.
     ///
     /// GDI's text and shape calls write the colour channels but leave the
     /// alpha byte untouched, which in a premultiplied layered window renders
-    /// as nothing at all. Any region that GDI drew into and that is meant to
-    /// be opaque has to be repaired afterwards; the speech bubble is exactly
-    /// that region. Clipped to the bitmap so a mis-sized rect cannot walk off
-    /// the buffer.
-    pub fn force_opaque(&self, rect: windows::Win32::Foundation::RECT) {
+    /// as nothing at all. Any region GDI drew into that is meant to be opaque
+    /// has to be repaired afterwards — the speech bubble is exactly that
+    /// region.
+    ///
+    /// The predicate is not optional sophistication. Repairing the whole
+    /// bounding box would also "repair" the transparent wedges outside a
+    /// rounded pill's corners, turning them into RGB 0 at alpha 255 — four
+    /// solid black notches on the product's hero surface. That artifact is
+    /// invisible against a dark-theme bubble and obvious against a light one,
+    /// which is precisely the kind of bug that survives a review.
+    ///
+    /// Clipped to the bitmap so a mis-sized rect cannot walk off the buffer.
+    pub fn force_opaque_where(
+        &self,
+        rect: windows::Win32::Foundation::RECT,
+        keep: impl Fn(i32, i32) -> bool,
+    ) {
         let left = rect.left.clamp(0, self.width);
         let right = rect.right.clamp(0, self.width);
         let top = rect.top.clamp(0, self.height);
@@ -105,7 +117,9 @@ impl Dib {
         for y in top..bottom {
             let row = y as usize * stride;
             for x in left..right {
-                bits[row + x as usize * 4 + 3] = 255;
+                if keep(x, y) {
+                    bits[row + x as usize * 4 + 3] = 255;
+                }
             }
         }
     }
@@ -272,6 +286,37 @@ mod tests {
     fn a_short_pixel_buffer_is_refused_not_read_past() {
         let bad = Frame { width: 4, height: 4, rgba: vec![0; 8] };
         assert!(Dib::premultiplied_from(&bad).is_err());
+    }
+
+    #[test]
+    fn the_alpha_repair_honours_its_mask() {
+        // The bug this guards: repairing the whole bounding box also
+        // "repaired" the transparent wedges outside a rounded pill's corners,
+        // turning them into RGB 0 at alpha 255 — four black notches on the
+        // hero surface, invisible on a dark theme and glaring on a light one.
+        let frame = solid(4, 4, [0, 0, 0, 0]);
+        let dib = Dib::premultiplied_from(&frame).expect("dib");
+        let rect = windows::Win32::Foundation::RECT { left: 0, top: 0, right: 4, bottom: 4 };
+        // Keep only the left half.
+        dib.force_opaque_where(rect, |x, _| x < 2);
+        let out = unsafe { std::slice::from_raw_parts(dib.bits, 4 * 4 * 4) };
+        for y in 0..4usize {
+            for x in 0..4usize {
+                let alpha = out[(y * 4 + x) * 4 + 3];
+                let expected = if x < 2 { 255 } else { 0 };
+                assert_eq!(alpha, expected, "pixel ({x},{y}) alpha");
+            }
+        }
+    }
+
+    #[test]
+    fn the_alpha_repair_clips_to_the_bitmap() {
+        let frame = solid(2, 2, [0, 0, 0, 0]);
+        let dib = Dib::premultiplied_from(&frame).expect("dib");
+        let huge = windows::Win32::Foundation::RECT { left: -50, top: -50, right: 500, bottom: 500 };
+        dib.force_opaque_where(huge, |_, _| true);
+        let out = unsafe { std::slice::from_raw_parts(dib.bits, 2 * 2 * 4) };
+        assert!(out.chunks_exact(4).all(|p| p[3] == 255));
     }
 
     #[test]

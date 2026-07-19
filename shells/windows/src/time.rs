@@ -33,6 +33,19 @@ pub fn tick_ms() -> u64 {
     unsafe { GetTickCount64() }
 }
 
+/// Monotonic seconds, for measuring *durations*.
+///
+/// Anything that asks "how long has this been happening" must use this rather
+/// than `wall_seconds`: the 12-second nudge cap, the tray-bounce burst, the
+/// overlay's goodbye beat, the auto-credit window. The wall clock is settable,
+/// and an NTP correction or a user dragging the clock backwards mid-nudge
+/// would leave those differences negative — freezing a buddy on screen instead
+/// of retiring it. The scheduler still runs on `wall_seconds`, because its
+/// deadlines have to survive sleep, which this clock does not measure.
+pub fn monotonic_seconds() -> f64 {
+    tick_ms() as f64 / 1000.0
+}
+
 /// ISO-8601 UTC with a `Z`, e.g. `2026-07-19T14:03:22Z` (CONTRACTS.md §0).
 /// Hand-formatted rather than pulling in chrono — the dependency budget in
 /// PORTS.md §6 says no chrono, and this is the only formatting we need.
