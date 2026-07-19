@@ -157,6 +157,14 @@ testable).
 
 ## 8. Phase 2b — Linux shell (`shells/linux`)
 
+**Primary target (Brennen, 2026-07-19): Ubuntu GNOME — the most widely used
+desktop Linux.** Since modern Ubuntu defaults to GNOME on Wayland (the
+no-overlay cell), tray + chime are the first-class Linux experience and the
+overlay is progressive enhancement for X11 and layer-shell compositors. KDE
+moves from acceptance requirement to later polish. Acceptance matrix
+reprioritized: GNOME Wayland and GNOME X11 are the must-pass cells; XFCE
+X11 is the third; KDE is deferred.
+
 Same Rust workspace; expect one codebase with runtime capability detection,
 not per-distro builds. The honest-degradation table is the design:
 
