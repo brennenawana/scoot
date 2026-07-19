@@ -6,23 +6,48 @@
 //! credit decision goes through the core's reducers; this crate owns clocks,
 //! DBus, X11, audio, and files.
 
+// The whole shell is Linux-only: X11, DBus and ALSA have no meaning
+// elsewhere. Gating the modules (rather than the workspace) keeps
+// `cargo test --workspace` green on the macOS and Windows CI legs, which is
+// the same shape shells/windows uses.
+#[cfg(target_os = "linux")]
 mod app;
+#[cfg(target_os = "linux")]
 mod assets;
+#[cfg(target_os = "linux")]
 mod autostart;
+#[cfg(target_os = "linux")]
 mod capabilities;
+#[cfg(target_os = "linux")]
 mod clock;
+#[cfg(target_os = "linux")]
 mod idle;
+#[cfg(target_os = "linux")]
 mod nudge;
+#[cfg(target_os = "linux")]
 mod overlay;
+#[cfg(target_os = "linux")]
 mod session;
+#[cfg(target_os = "linux")]
 mod storage;
+#[cfg(target_os = "linux")]
 mod tray;
 
+#[cfg(not(target_os = "linux"))]
+fn main() {
+    eprintln!("scoot: the Linux shell only runs on Linux (docs/PORTS.md §8)");
+    std::process::exit(1);
+}
+
+#[cfg(target_os = "linux")]
 use std::sync::mpsc;
 
+#[cfg(target_os = "linux")]
 use capabilities::{Capabilities, Environment, IdleSourceKind, OverlayKind, SessionType};
+#[cfg(target_os = "linux")]
 use nudge::NudgeStyle;
 
+#[cfg(target_os = "linux")]
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
@@ -38,6 +63,7 @@ fn main() {
     }
 }
 
+#[cfg(target_os = "linux")]
 fn help() {
     println!("scoot — a tiny buddy that reminds you to move\n");
     println!("  (no arguments)   run in the tray");
@@ -46,6 +72,7 @@ fn help() {
     println!("\nState lives in {}", storage::data_dir().display());
 }
 
+#[cfg(target_os = "linux")]
 fn run() {
     let environment = Environment::detect();
     let settings = storage::SettingsStore::load();
@@ -143,6 +170,7 @@ fn run() {
     application.run(rx);
 }
 
+#[cfg(target_os = "linux")]
 fn start_tray(tx: mpsc::Sender<tray::Command>) -> Option<ksni::blocking::Handle<tray::ScootTray>> {
     use ksni::blocking::TrayMethods;
     match tray::ScootTray::new(tx).spawn() {
@@ -156,6 +184,7 @@ fn start_tray(tx: mpsc::Sender<tray::Command>) -> Option<ksni::blocking::Handle<
     }
 }
 
+#[cfg(target_os = "linux")]
 fn probe_capabilities() {
     let environment = Environment::detect();
     let source = idle::detect(environment.session);
@@ -175,6 +204,7 @@ fn probe_capabilities() {
     println!("autostart={}", autostart::desktop_path().display());
 }
 
+#[cfg(target_os = "linux")]
 fn probe_idle() {
     let environment = Environment::detect();
     let mut source = idle::Resilient::new(idle::detect(environment.session));
@@ -194,14 +224,17 @@ fn probe_idle() {
 
 /// A StatusNotifierItem host must own `org.kde.StatusNotifierWatcher`; without
 /// one, an SNI tray would publish into the void.
+#[cfg(target_os = "linux")]
 fn tray_host_present() -> bool {
     name_has_owner(false, "org.kde.StatusNotifierWatcher")
 }
 
+#[cfg(target_os = "linux")]
 fn logind_present() -> bool {
     name_has_owner(true, "org.freedesktop.login1")
 }
 
+#[cfg(target_os = "linux")]
 fn name_has_owner(system: bool, name: &str) -> bool {
     let conn = if system {
         zbus::blocking::Connection::system()

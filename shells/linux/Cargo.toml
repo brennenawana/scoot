@@ -2,34 +2,37 @@
 name = "scoot-linux"
 version = "0.1.0"
 edition = "2021"
-description = "Scoot's Linux shell — tray citizen, nudge styles, platform signals (docs/PORTS.md §8)"
+description = "Scoot's Linux shell — a tray citizen that feeds signals to scoot-core and renders its decisions (docs/PORTS.md §8)"
 license = "MIT"
 
 [[bin]]
 name = "scoot"
 path = "src/main.rs"
 
+# Dependency budget (PORTS.md §6/§12 — each justified, nothing else):
+#   scoot-core  the judgment; no decision is made outside it
+#   serde/_json settings.json + events.jsonl (CONTRACTS.md §8.5/§8.6)
+#   zbus        DBus, pure Rust (no libdbus-1-dev on a build host): logind
+#               session signals and org.gnome.Mutter.IdleMonitor
+#   ksni        the StatusNotifierItem path PORTS.md §8 names; rides the same
+#               zbus stack, so the tray adds no second runtime
+#   x11rb       pure-Rust X11 (no libx11/libxcb headers): the XScreenSaver
+#               idle clock and the override-redirect overlay
+#   png         sprite strips and tray atlases decode at the shell
+#   rodio       the chime, per §8's degradation table ("rodio acceptable")
+# No async runtime in the judgment path (zbus and ksni are used through their
+# blocking APIs), no chrono, no UI framework, no Electron (PORTS.md §9).
 [dependencies]
 scoot-core = { path = "../../core-rs" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# DBus, pure Rust (no libdbus-1-dev on the build host): logind session
-# signals and org.gnome.Mutter.IdleMonitor. blocking API keeps the shell a
-# plain threaded program — no async runtime in the judgment path.
-zbus = { version = "5", default-features = false, features = ["async-io", "blocking-api"] }
-
-# StatusNotifierItem tray — the path PORTS.md §8 names. Rides the same
-# zbus/async-io stack, so the tray adds no second runtime.
-ksni = { version = "0.3", default-features = false, features = ["async-io", "blocking"] }
-
-# X11, pure Rust protocol implementation: XScreenSaver idle clock and the
-# override-redirect overlay window. No libx11/libxcb headers needed.
-x11rb = { version = "0.14", features = ["screensaver", "shape", "xfixes", "randr"] }
-
-# Sprite sheets and tray atlases are committed PNGs (CONTRACTS.md §8.1).
+# Everything below is Linux-only, so the crate builds to an empty stub on
+# macOS and Windows (see main.rs) and `cargo test --workspace` stays green on
+# every CI target — the same shape shells/windows uses.
+[target.'cfg(target_os = "linux")'.dependencies]
 png = "0.18"
-
-# The chime, per the degradation table ("rodio acceptable"). ALSA/PipeWire
-# via cpal; needs libasound2-dev at build time.
+zbus = { version = "5", default-features = false, features = ["async-io", "blocking-api"] }
+ksni = { version = "0.3", default-features = false, features = ["async-io", "blocking"] }
+x11rb = { version = "0.14", features = ["screensaver", "shape", "xfixes", "randr"] }
 rodio = { version = "0.22", default-features = false, features = ["playback", "wav"] }
