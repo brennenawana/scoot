@@ -50,6 +50,8 @@ Open `Package.swift` in Xcode if you want the debugger. There is deliberately no
 | [DISTRIBUTION.md](docs/DISTRIBUTION.md) | Direct-download strategy, audience sequencing, the rare-drop calendar |
 | [ROADMAP.md](docs/ROADMAP.md) | v0.1 → v0.5 milestones and the expansion arcs (modes, economy, hardware, Windows, local AI) |
 | [BACKLOG.md](docs/BACKLOG.md) | The open ledger: deferred verifications, known gaps, the agreed path into v0.3 |
+| [PHILOSOPHY.md](docs/PHILOSOPHY.md) | Why the architecture is shaped this way and how to extend it: pure core, seams, content-as-data, honesty invariants |
+| [PORTS.md](docs/PORTS.md) | Windows & Linux port PRD: contract freeze, golden vectors, Rust core, thin native shells |
 | [DESIGN.md](docs/DESIGN.md) | The two-layer aesthetic, pixel art spec, Claude Design workflow + prompts |
 | [VERIFY.md](docs/VERIFY.md) | First-run-on-a-real-Mac checklist |
 | [RELEASING.md](docs/RELEASING.md) | Signing, notarization, Sparkle, Homebrew runbook |

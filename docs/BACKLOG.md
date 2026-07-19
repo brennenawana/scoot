@@ -47,6 +47,14 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
 - [ ] **Naming-field polish**: suggestion text isn't pre-selected on focus;
       replacing it takes a cmd+A first.
 
+## 3b. Ports (PRD written, execution mostly gated — see PORTS.md)
+
+- [ ] **Phase 0 — contract freeze + golden vectors** (ungated, ~1 day):
+      docs/CONTRACTS.md + `scoot-vectors` exporter + CI drift alarm
+      (PORTS.md §5). Hardens the macOS app regardless of ports.
+- [ ] Phases 1–3 (Rust core, Windows shell, Linux shell) — gated per
+      ROADMAP Arc D; full spec in [PORTS.md](PORTS.md).
+
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
 Onboarding flow proper (roll-first) · share cards + GIF export ·
