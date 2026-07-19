@@ -44,11 +44,12 @@ pub enum AppEvent {
     OverlayTimedOut,
 }
 
-/// One nudge's 15-minute auto-credit window (CONTRACTS.md §7).
+/// One nudge's 15-minute auto-credit window (CONTRACTS.md §7). "One credit per
+/// nudge window regardless of source" is enforced structurally: crediting
+/// drops the window, so there is nothing left to credit against.
 struct NudgeWindow {
     detector: MovementDetector,
     fired_at: f64,
-    credited: bool,
 }
 
 pub struct App {
@@ -179,13 +180,9 @@ impl App {
         match window.detector.observe(idle_seconds, elapsed) {
             Verdict::Watching => {}
             Verdict::MovementDetected => {
-                let already = window.credited;
-                self.window = None;
-                if !already {
-                    // "Saw you step away. +1 scoot." — the moment the product
-                    // is actually about (PRODUCT.md §1).
-                    self.credit("movementDetected");
-                }
+                // "Saw you step away. +1 scoot." — the moment the product is
+                // actually about (PRODUCT.md §1).
+                self.credit("movementDetected");
             }
             Verdict::WindowExpired => {
                 self.window = None;
@@ -250,7 +247,6 @@ impl App {
         self.window = Some(NudgeWindow {
             detector: MovementDetector::default(),
             fired_at: now,
-            credited: false,
         });
     }
 
@@ -280,9 +276,6 @@ impl App {
 
         // A manual click consumes the window too — one credit per nudge
         // window regardless of source (CONTRACTS.md §7).
-        if let Some(window) = self.window.as_mut() {
-            window.credited = true;
-        }
         self.window = None;
 
         if let Some(tray) = &self.tray {
@@ -357,18 +350,13 @@ impl App {
                 crate::autostart::set(enabled);
             }
             Command::SetTelemetry(enabled) => {
-                // Order matters: when switching off, log the change *first*
-                // so the last line in the file explains why it stops; when
-                // switching on, enable first so the change is recorded.
-                if enabled {
-                    self.settings.settings.telemetry_enabled = true;
-                    self.log.set_enabled(true);
-                    self.log.log("telemetry_enabled", &[("enabled", "true")]);
-                } else {
-                    self.log.log("telemetry_enabled", &[("enabled", "false")]);
-                    self.settings.settings.telemetry_enabled = false;
-                    self.log.set_enabled(false);
-                }
+                // No event is logged either way. "Telemetry off = zero writes"
+                // is constitutional (PHILOSOPHY.md §5) and the checklist
+                // verifies it by watching the file stop growing — a farewell
+                // line written as the user opts out is exactly what that check
+                // is looking for. macOS logs nothing here either.
+                self.settings.settings.telemetry_enabled = enabled;
+                self.log.set_enabled(enabled);
                 self.settings.save();
             }
             Command::Quit => self.quitting = true,
@@ -491,7 +479,6 @@ mod tests {
         a.window = Some(NudgeWindow {
             detector: MovementDetector::default(),
             fired_at: 0.0,
-            credited: false,
         });
 
         a.credit("acknowledged");
@@ -507,7 +494,6 @@ mod tests {
         a.window = Some(NudgeWindow {
             detector: MovementDetector::default(),
             fired_at: 0.0,
-            credited: false,
         });
         a.last_manual_credit = Some(a.now());
         a.credit("movementDetected");
@@ -521,7 +507,6 @@ mod tests {
         a.window = Some(NudgeWindow {
             detector: MovementDetector::default(),
             fired_at: 0.0,
-            credited: false,
         });
         a.last_manual_credit = Some(a.now());
         a.credit("acknowledged");
@@ -534,7 +519,6 @@ mod tests {
         a.window = Some(NudgeWindow {
             detector: MovementDetector::default(),
             fired_at: 0.0,
-            credited: false,
         });
         a.credit("acknowledged");
         assert!(a.window.is_none(), "a manual click must consume the window too");

@@ -147,6 +147,25 @@ mod tests {
     }
 
     #[test]
+    fn the_committed_chime_decodes() {
+        // Playback needs an audio device, which CI does not have — but
+        // decoding does not, and a chime that cannot decode is the failure
+        // that would otherwise only show up as silence on a user's desk.
+        use rodio::Source;
+        let cursor = std::io::Cursor::new(assets::NUDGE_CHIME);
+        let source = rodio::Decoder::new(cursor).expect("nudge-chime.wav decodes");
+        assert!(source.channels().get() >= 1);
+        assert!(source.sample_rate().get() >= 8000);
+
+        let samples: Vec<f32> = source.collect();
+        assert!(!samples.is_empty(), "chime decoded to no audio");
+        // Two soft notes, not a click or a full-scale beep.
+        let peak = samples.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+        assert!(peak > 0.01, "chime is effectively silent (peak {peak})");
+        assert!(peak <= 1.0, "chime clips (peak {peak})");
+    }
+
+    #[test]
     fn the_bounce_runs_at_a_charming_frame_rate() {
         // DESIGN.md §2 pins the animation band at 8-12 fps.
         let fps = 1000 / BOUNCE_FRAME.as_millis();

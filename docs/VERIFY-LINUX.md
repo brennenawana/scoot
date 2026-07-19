@@ -129,10 +129,21 @@ Ground truth is `~/.local/share/scoot/events.jsonl`.
 - [x] **Max nudge duration** — an ignored overlay logged
       `nudge_outcome timedOut` exactly 12s after `nudge_fired`
       (18:33:45 → 18:33:57), the PRODUCT.md §3 ceiling
-- [ ] **Auto-credit on real absence** — needs a genuine ≥2-minute absence
-      *after* a nudge fires; idle cannot be faked. The detector is
-      unit-tested and the idle clock is verified, but the end-to-end
-      `scoot_credited source=movementDetected` beat has not been observed
+- [x] **Auto-credit on real absence** — the "it just knows" moment, observed
+      end to end. Six untouched minutes (idle 360.05s), then a single
+      keypress at 18:51:20 → `scoot_credited source=movementDetected` at
+      18:51:31, **11 seconds after returning**, inside the ~15s the product
+      promises. `interval_reset / absence_counted_as_movement` followed in the
+      same tick
+
+      *A note on how this was measured, because the first attempt was wrong:*
+      with a 1-minute test interval and only a 3-minute absence, a fresh nudge
+      kept landing every 60s and each one opens a **new** detector window
+      (CONTRACTS.md §7: one detector per nudge window). No window ever
+      accumulated the 120s of idle the rule needs, so nothing credited — the
+      test was mis-designed, not the code. A six-minute absence lets the
+      scheduler cross `idleGrace` and hold, after which the surviving window
+      watches the whole absence. Worth knowing before anyone re-runs this.
 - [ ] **Lock across a deadline** — logind `Lock`/`Unlock` wired and the session
       resolves (via `GetUser().Display`), but locking this box's live session
       is Brennen-coordinated
@@ -228,6 +239,34 @@ the desk emptied; a reset once the absence passed five minutes, with **no
 stale nudge on return**; an ignored nudge standing down at exactly 12s; a
 clicked nudge crediting a scoot; and a second click inside ten minutes
 refused. That is the v0.1 loop, on Linux, against a real idle clock.
+
+The auto-credit run, six untouched minutes on the same bench:
+
+```jsonl
+{"name":"nudge_fired","props":{"styles":"icon-bounce",...},"ts":"...18:48:16Z"}
+{"name":"nudge_held","props":{"detail":"user_idle"},"ts":"...18:49:16Z"}
+{"name":"interval_reset","props":{"detail":"long_absence"},"ts":"...18:50:16Z"}
+{"name":"nudge_held","props":{"detail":"user_idle"},"ts":"...18:51:16Z"}
+{"name":"scoot_credited","props":{"source":"movementDetected"},"ts":"...18:51:31Z"}
+{"name":"interval_reset","props":{"detail":"absence_counted_as_movement"},"ts":"...18:51:31Z"}
+```
+
+The user did nothing in the app. They walked away and came back, and Scoot
+had already noticed.
+
+### Telemetry vocabulary
+
+Two additions to CONTRACTS.md §8.5's core event list, both Linux-specific
+diagnostics rather than product events, and neither replacing a core name:
+
+| Event | Why |
+|---|---|
+| `idle_source_lost` | An idle source that answered at startup stopped answering. Logged once per outage, not once per tick |
+| `scoot_credit_suppressed` with `reason=no-idle-source` | Not a new name — the core one, carrying the degradation table's mandated "logged in telemetry so we know how common this is" |
+
+No event is written when telemetry is switched **off**, in either direction:
+"telemetry off = zero writes" is constitutional, and a farewell line written
+as the user opts out is exactly what §7's check is looking for.
 
 ## Reporting
 

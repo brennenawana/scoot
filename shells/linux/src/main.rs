@@ -48,7 +48,7 @@ fn help() {
 
 fn run() {
     let environment = Environment::detect();
-    let mut settings = storage::SettingsStore::load();
+    let settings = storage::SettingsStore::load();
 
     let idle_source = idle::detect(environment.session);
     let idle_kind = idle_source.kind();
@@ -135,12 +135,9 @@ fn run() {
     // Keep the autostart entry in step with the setting on every launch: a
     // moved or reinstalled binary would otherwise leave a .desktop pointing
     // at a path that no longer exists.
-    if settings.settings.launch_at_login != autostart::is_enabled() || settings.settings.launch_at_login {
-        autostart::set(settings.settings.launch_at_login);
-    }
+    autostart::set(settings.settings.launch_at_login);
 
     let log = storage::EventLog::new(settings.settings.telemetry_enabled);
-    settings.save();
 
     let mut application = app::App::new(settings, log, idle, caps, tray_handle, styles);
     application.run(rx);
