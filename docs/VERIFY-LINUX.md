@@ -40,7 +40,7 @@ prints the row it actually detected, so the two can be compared directly.
 
 | Capability | GNOME X11 | GNOME Wayland | XFCE X11 |
 |---|---|---|---|
-| Tray (StatusNotifierItem) | ✅ via appindicator extension | ✅ via appindicator extension | ✅ via `xfce4-statusnotifier-plugin` (else none) |
+| Tray (StatusNotifierItem) | ✅ via appindicator extension | ✅ via appindicator extension | ✅ **built into xfce4-panel** — see §7c |
 | Idle clock | ✅ MIT-SCREEN-SAVER | ✅ `org.gnome.Mutter.IdleMonitor` | ✅ MIT-SCREEN-SAVER |
 | ↳ *not* `ext-idle-notify-v1` | n/a | **Mutter 46.2 does not implement it** — see below | n/a |
 | Auto-credit | ✅ | ✅ | ✅ |
@@ -139,8 +139,8 @@ scoot --probe-idle
       largest integer scale that fits, centred on an integral origin
 - [x] **The resting icon is coloured, not a macOS template** — a black+alpha
       icon would vanish into Ubuntu's dark top bar; asserted in a unit test
-- [ ] **Menu items drive the app** — pending: exercised through unit tests on
-      the command channel, not yet clicked live on the panel
+- [x] **Menu items drive the app** — Brennen exercised the tray menu's options
+      and settings on the live panel, 2026-07-19: all behaved correctly
 - [x] **Tray survives alongside real tray citizens** — sits in the panel next
       to OBS, the actions-runner and Discord without displacing them
 
@@ -284,6 +284,53 @@ socket — and tears down the X server the session was attached to, so
 gnome-session dies straight back to the greeter. Ubuntu's Wayland session
 expects **GDM3**, which is installed but not the active display manager.
 
+## 7c. XFCE X11 — verified through a nested X server
+
+Same trick as §7b, one layer down: a nested **Xephyr** X server running
+`xfwm4` + `xfce4-panel` on its own session bus. No logout, no risk to the
+running desktop.
+
+```sh
+Xephyr :5 -screen 1400x900
+DISPLAY=:5 dbus-run-session -- sh -c 'xfwm4 & xfce4-panel'
+DISPLAY=:5 XDG_CURRENT_DESKTOP=XFCE DBUS_SESSION_BUS_ADDRESS=<nested bus> scoot
+```
+
+- [x] **Capability row matches §1**:
+      `session=x11 desktop=xfce tray=sni idle=xscreensaver
+      overlay=x11-override-redirect session-signals=logind auto-credit=on`
+- [x] **Tray works, and needs no extra package** — Scoot registered as
+      `org.kde.StatusNotifierItem-…` and appeared in the panel, crisp:
+      ![xfce tray](assets/verify-linux-xfce-tray.png)
+- [x] **Overlay works under a different window manager** — `xfwm4` is not
+      Mutter, and override-redirect placement still landed on the exact
+      integral origin: `96x96+1256+756` on a 1400×900 screen
+      (`1400−96−48`, `900−96−48`):
+      ![xfce overlay](assets/verify-linux-xfce-overlay.png)
+- [x] **Nudge on the interval** — `scheduler_started 20:54:51` →
+      `nudge_fired 20:55:51`, exactly 60s
+- [x] **Idle source** — MIT-SCREEN-SAVER, the same path GNOME X11 uses
+
+### Correction: XFCE needs no tray plugin
+
+This document previously assumed XFCE's tray required
+`xfce4-statusnotifier-plugin`. That is wrong on Ubuntu 24.04, twice over:
+
+* The package does not exist in the archive under that name (the nearest
+  equivalent is `xfce4-sntray-plugin`), **and**
+* it is not needed. `xfce4-panel`'s built-in `libsystray.so` — *"Status Tray
+  Plugin: provides status notifier items (application indicators) and legacy
+  systray items"* — already owns `org.kde.StatusNotifierWatcher` and reports
+  `IsStatusNotifierHostRegistered = true`.
+
+Worth checking rather than assuming, because a watcher on the bus with no
+host behind it would have let Scoot claim a tray that shows nothing. The host
+flag is the field that actually matters, and it was checked.
+
+**What a nested X server cannot prove**, same caveat as §7b: this is not a
+login session, so autostart, lock/sleep and whole-session idle under XFCE are
+untested, and the idle clock tracks input to the nested display only.
+
 ## 8. Verifying another cell
 
 ```sh
@@ -313,18 +360,31 @@ not take on a production box.
 | Check | Why it needs a human | What it would prove |
 |---|---|---|
 | **GNOME Wayland as a real login session** | Blocked on LightDM (§7b); needs the display manager switched to GDM3, which costs a reboot on a production box | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
-| **XFCE X11 cell** | Needs an XFCE session installed and logged into | The third acceptance cell |
+| **XFCE X11 as a real login session** | A logout into "Xfce Session" | Autostart, lock/sleep and whole-session idle *under XFCE*. The cell's code paths are already covered by the nested run in §7c |
 | **Screen lock across a deadline** | Locking the live session | `Lock`/`Unlock` → suspend/resume, and no stale nudge on return |
 | **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh |
-| **Autostart survives re-login** | A logout | The `.desktop` entry actually starts Scoot |
-| **The chime, by ear** | Audible sound while OBS records | The 2-note chime is warm and not startling |
+| **The chime, by ear** | Playing audio on someone's desk | The 2-note chime is warm and not startling |
 | **The full honest workday** | A real day of real work | The v0.1 exit bar: zero wrong-moment nudges |
 
-**Housekeeping note**: this session wrote
-`~/.config/autostart/scoot.desktop` pointing at the debug build in
-`/mnt/storage/projects/scoot/target/debug/scoot` (the setting defaults on).
-Delete that file, or toggle "Start at login" off in the tray menu, if Scoot
-should not launch at the next login.
+Of these, **screen lock is the one worth doing first.** It is a §10 checklist
+item, it takes a minute, and it guards the highest-stakes behaviour: if the
+`Lock`/`Unlock` wiring is wrong the symptom is a stale nudge the instant you
+come back, which is precisely the wrong-moment nudge the product's reputation
+rests on. The code is wired and the session resolves; no signal has ever
+reached the reducer on this machine.
+
+**A note on scope.** An earlier draft of the exit bar read "never nudging
+while OBS records". That was development hygiene — keeping the buddy out of a
+screen recording during this milestone — and not a product requirement.
+Scoot has no recording, camera or meeting detection on *any* platform; it is
+v0.4 work (BACKLOG §4) and macOS v0.1/v0.2 shipped without it. The Linux exit
+bar is therefore the same as the macOS one: zero nudges at moments v0.1's
+judgment can actually see — empty desk, locked, asleep.
+
+**Housekeeping note**: `~/.config/autostart/scoot.desktop` points at the debug
+build in `/mnt/storage/projects/scoot/target/debug/scoot` (launch-at-login
+defaults on, and Brennen kept it deliberately to verify re-login). Toggle
+"Start at login" off in the tray menu, or delete the file, to stop it.
 
 ## 10. Results log
 
