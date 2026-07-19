@@ -7,3 +7,6 @@ xcuserdata/
 
 # Rust workspace build output
 /target
+
+# Python asset generators leave these behind
+__pycache__/

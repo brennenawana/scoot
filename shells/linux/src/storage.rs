@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 use crate::clock::iso8601_utc;
@@ -186,9 +186,6 @@ impl SettingsStore {
         }
     }
 
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
 }
 
 // --------------------------------------------------------------- telemetry
@@ -212,10 +209,6 @@ impl EventLog {
 
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
-    }
-
-    pub fn path(&self) -> &Path {
-        &self.path
     }
 
     pub fn log(&self, name: &str, props: &[(&str, &str)]) {

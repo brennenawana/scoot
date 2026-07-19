@@ -58,13 +58,25 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       conformant to every golden vector + mirrored 9-sigma property tests,
       deps serde+serde_json only. Owner Brennen waived the Arc D calendar
       gate for execution.
-- [ ] Phases 2a/2b (Windows shell, Linux shell) — next; run M2 on the real
-      Windows machine per the kickoff prompt; full spec in
-      [PORTS.md](PORTS.md). M3 bench surveyed 2026-07-19: clawdbot-server
-      (Ubuntu 24.04, GNOME 46) covers the GNOME/X11 cell live (appindicator
-      tray present, real screenshots via ImageMagick); Wayland/XFCE need a
-      coordinated logout (it's a busy production box — be a guest); KDE
-      cell needs a VM or a later install; Rust toolchain not yet installed.
+- [ ] Phase 2a (Windows shell) — running in parallel on the real Windows
+      machine per the kickoff prompt; full spec in [PORTS.md](PORTS.md).
+- [ ] Phase 2b (Linux shell) — **GNOME X11 cell green 2026-07-19** on
+      clawdbot-server: tray, scheduler judgment, overlay, credit and
+      anti-cheese all verified live with screenshots and `events.jsonl`
+      (see [VERIFY-LINUX.md](VERIFY-LINUX.md)). Still open, and listed there
+      rather than here so the evidence stays with the checklist: the GNOME
+      Wayland and XFCE cells (need a coordinated logout on a production box),
+      lock/sleep across a deadline, autostart across a re-login, the
+      end-to-end auto-credit beat, and the honest-workday exit bar.
+- [ ] **Wayland idle beyond GNOME**: `ext-idle-notify-v1` (PORTS.md §8's
+      Wayland *primary* path) is not implemented. All three acceptance cells
+      are covered by the two sources that are — MIT-SCREEN-SAVER and
+      `org.gnome.Mutter.IdleMonitor` — so no cell regresses, but a wlroots
+      compositor (sway, Hyprland) currently lands on "no idle source →
+      auto-credit disabled + logged". Flagged for Brennen rather than
+      silently absorbed, since the degradation table names it.
+- [ ] **KDE cell** — deferred to polish per PORTS.md §8; needs a VM or an
+      install.
 
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
