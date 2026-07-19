@@ -76,7 +76,9 @@ ROADMAP gates v0.3's *verdicts* behind v0.2's attachment evidence, but v0.3's
    kill switch shipped (ExperimentManifest, tested); local-file loading
    wired dark in AppCoordinator (drop experiments.json in App Support to
    exercise it). Still open: the remote fetcher (6h refresh), consent UI,
-   aggregator + uploader, published event schema.*
+   aggregator + uploader, published event schema. Direction note
+   2026-07-19: the fetcher is rung L0 of [LIVEOPS.md](LIVEOPS.md) — build
+   the NetworkGateway + ledger (L1) with or before it, not after.*
 3. Run the friends & family round as that infrastructure's first real data —
    it measures the v0.2 exit metric (naming rate) without asking friends for
    screenshots.
