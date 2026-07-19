@@ -116,9 +116,16 @@ scoot --probe-idle
 
 - [x] **Icon appears in the GNOME top bar** — screenshot shows the buddy
       alongside OBS, the actions-runner, and Discord
-- [x] **Pixels are hard at panel size** — a 12× magnification of the live
-      34×34 screen region shows every edge on an exact pixel boundary; no
-      interpolation, no blur (DESIGN.md §4's Layer-2 test)
+- [x] **Pixels are hard at panel size** — a magnification of the live 34×34
+      screen region shows every edge on an exact pixel boundary; no
+      interpolation, no blur (DESIGN.md §4's Layer-2 test).
+      Evidence: ![tray icon](assets/verify-linux-tray-icon.png)
+      and the live bounce frames:
+      ![bounce](assets/verify-linux-tray-bounce.png)
+
+      *(Only Scoot's own pixels are committed. The wider panel and overlay
+      captures showed the machine owner's Discord content and stay off the
+      repo.)*
 - [x] **Icon sizes are generated, never runtime-rescaled** —
       `scripts/gen-linux-tray.py` emits 16/22/24/32/48/64px atlases at the
       largest integer scale that fits, centred on an integral origin
