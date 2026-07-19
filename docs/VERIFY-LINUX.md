@@ -183,9 +183,32 @@ Ground truth is `~/.local/share/scoot/events.jsonl`.
       test was mis-designed, not the code. A six-minute absence lets the
       scheduler cross `idleGrace` and hold, after which the surviving window
       watches the whole absence. Worth knowing before anyone re-runs this.
-- [ ] **Lock across a deadline** — logind `Lock`/`Unlock` wired and the session
-      resolves (via `GetUser().Display`), but locking this box's live session
-      is Brennen-coordinated
+- [x] **Lock across a deadline** — verified 2026-07-19 on the live session,
+      with a 1-minute interval:
+
+      ```
+      21:00:51  interval_reset → Running(next fire 21:01:51)
+      21:01:51  ← deadline passes, NOTHING logged     (Suspended)
+      ~21:02:2x screen unlocked
+      21:03:21  nudge_fired                           (~60s after unlock)
+      ```
+
+      Three separate things are proven here. **The Lock signal reached the
+      reducer**: a deadline passed in total silence, and `Suspended` is the
+      only state whose tick emits nothing — `Running` would have fired,
+      `Holding` would have logged `nudge_held`, `Paused` would have logged
+      `paused`. **No stale nudge on unlock**, the failure this guards against.
+      And **the wake grace is visible in the timing** — the nudge landed a
+      minute after the unlock, not instantly, which is §6's
+      `running(max(base, now + wakeGrace))` with `wakeGrace = 60s` behaving to
+      the second.
+
+      Note there is no direct log line for suspend/resume, and there should
+      not be: macOS doesn't emit one either (`SystemStateObserver` dispatches
+      straight to the scheduler), so the verification is necessarily the
+      *absence* of events across a deadline plus the deferred resume. The tray
+      tooltip was read over DBus at the same time — "Next scoot in under a
+      minute" — to rule out a wedged tick loop explaining the same silence.
 - [ ] **Sleep across a deadline** — `PrepareForSleep` wired; suspending a
       production server is out of scope for an agent session
 
@@ -361,17 +384,9 @@ not take on a production box.
 |---|---|---|
 | **GNOME Wayland as a real login session** | Blocked on LightDM (§7b); needs the display manager switched to GDM3, which costs a reboot on a production box | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
 | **XFCE X11 as a real login session** | A logout into "Xfce Session" | Autostart, lock/sleep and whole-session idle *under XFCE*. The cell's code paths are already covered by the nested run in §7c |
-| **Screen lock across a deadline** | Locking the live session | `Lock`/`Unlock` → suspend/resume, and no stale nudge on return |
-| **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh |
+| **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh. Lower risk than it was: lock/unlock is now verified (§5) and rides the same logind listener and the same core transition |
 | **The chime, by ear** | Playing audio on someone's desk | The 2-note chime is warm and not startling |
 | **The full honest workday** | A real day of real work | The v0.1 exit bar: zero wrong-moment nudges |
-
-Of these, **screen lock is the one worth doing first.** It is a §10 checklist
-item, it takes a minute, and it guards the highest-stakes behaviour: if the
-`Lock`/`Unlock` wiring is wrong the symptom is a stale nudge the instant you
-come back, which is precisely the wrong-moment nudge the product's reputation
-rests on. The code is wired and the session resolves; no signal has ever
-reached the reducer on this machine.
 
 **A note on scope.** An earlier draft of the exit bar read "never nudging
 while OBS records". That was development hygiene — keeping the buddy out of a
