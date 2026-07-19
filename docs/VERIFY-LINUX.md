@@ -212,7 +212,28 @@ Ground truth is `~/.local/share/scoot/events.jsonl`.
 - [ ] **Telemetry toggle off → the file stops growing** — enforced in the sink
       and unit-tested; not yet exercised through the live menu
 
-## 8. PENDING COORDINATION — checks that need Brennen
+## 8. Verifying another cell
+
+```sh
+scripts/verify-linux-cell.sh            # full run, ~10 minutes
+scripts/verify-linux-cell.sh --quick    # capability row + idle clock, ~1 min
+```
+
+Run it **inside** the session under test. It records the capability row, the
+idle clock's climb-and-reset, the tray, the chime, a nudge on the interval and
+the empty-desk hold, then restores your settings and leaves a log plus the raw
+`events.jsonl` to hand back.
+
+It is guided rather than automatic on purpose: Wayland deliberately blocks
+synthetic input, so `xdotool` cannot fake the "user came back" moment the way
+it can on X11. The idle checks ask you to genuinely step away and genuinely
+return — faking that would defeat the check.
+
+Its first section doubles as the **autostart** verification: on the first run
+after a fresh login, finding Scoot already running is the proof that
+`~/.config/autostart/scoot.desktop` did its job.
+
+## 9. PENDING COORDINATION — checks that need Brennen
 
 These are **not** claimed anywhere above. Each needs an action an agent must
 not take on a production box.
@@ -233,7 +254,7 @@ not take on a production box.
 Delete that file, or toggle "Start at login" off in the tray menu, if Scoot
 should not launch at the next login.
 
-## 9. Results log
+## 10. Results log
 
 Raw `events.jsonl` from the GNOME X11 run, 2026-07-19. This is the evidence
 behind §5; the interval was set to 1 minute so a full day's behaviour fits in

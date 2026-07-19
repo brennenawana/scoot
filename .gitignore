@@ -10,3 +10,8 @@ xcuserdata/
 
 # Python asset generators leave these behind
 __pycache__/
+
+# Output of scripts/verify-linux-cell.sh (hand these to a session, don't commit)
+verify-linux-*.log
+verify-linux-*.jsonl
+verify-linux-tray-*.png
