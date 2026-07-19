@@ -18,7 +18,15 @@ the degradation table is the spec, not an excuse.
 | Desktop | GNOME Shell 46.0, session via LightDM, `XDG_CURRENT_DESKTOP=ubuntu:GNOME` |
 | Session | **X11** (`loginctl` seat0 → `Type=x11`), single 3840×1080 display |
 | Tray host | `ubuntu-appindicators@ubuntu.com` — ACTIVE, owns `org.kde.StatusNotifierWatcher` |
+| Display manager | **LightDM 1.30** — cannot launch Wayland sessions (§7b). GDM3 46.2 is installed but inactive |
 | Toolchain | rustup 1.97.1, `libasound2-dev` for rodio/cpal |
+
+Bench housekeeping done 2026-07-19: the login session menu had five entries,
+two of them both literally named "Ubuntu" (the unqualified `ubuntu.desktop`
+ships in *both* `xsessions` and `wayland-sessions`) and two of them Wayland
+entries that cannot work under LightDM. The three redundant/broken ones are
+hidden with `dpkg-divert` — upgrade-proof and reversible with
+`dpkg-divert --remove` — leaving **Ubuntu on Xorg** and **Xfce Session**.
 
 Because the box hosts real work, verification is deliberately non-invasive:
 input is injected with `xdotool key shift` (a bare modifier types nothing and
@@ -215,9 +223,66 @@ Ground truth is `~/.local/share/scoot/events.jsonl`.
 - [x] **Autostart entry is written with an absolute `Exec=`** — a relative path
       would silently fail at login. Carries `X-GNOME-Autostart-Delay=10` so the
       tray host owns its DBus name before we publish
-- [ ] **Autostart survives re-login** — requires a logout; Brennen-coordinated
+- [x] **Autostart survives re-login** — verified 2026-07-19. After a real
+      logout and login, Scoot was already in the tray, and the journal carries
+      the proof rather than just an eyeball:
+      `systemd[1337]: Started app-gnome-scoot-2037248.scope - Application
+      launched by gnome-session-binary` at 16:20:45
 - [ ] **Telemetry toggle off → the file stops growing** — enforced in the sink
       and unit-tested; not yet exercised through the live menu
+
+## 7b. GNOME Wayland — verified through a nested compositor
+
+The real-session route is blocked (see below), so the cell was exercised
+against a **real Mutter Wayland compositor running nested in a window**:
+
+```sh
+dbus-run-session -- gnome-shell --nested --wayland --wayland-display=scoot-nested
+# then, pointed at that compositor and its bus:
+env -u DISPLAY WAYLAND_DISPLAY=scoot-nested XDG_SESSION_TYPE=wayland \
+    XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=<nested bus> scoot
+```
+
+- [x] **Capability row matches §1 exactly**, field for field:
+      `session=wayland desktop=ubuntu:gnome tray=sni idle=mutter-idle-monitor
+      overlay=none session-signals=logind auto-credit=on`
+- [x] **Tray works on Wayland** — the appindicator extension provides
+      `org.kde.StatusNotifierWatcher` on the nested bus, and the buddy appears
+      in the panel: ![wayland tray](assets/verify-linux-wayland-tray.png)
+- [x] **Idle clock works** — `org.gnome.Mutter.IdleMonitor` answered and
+      climbed correctly (39.31 → 42.33 → 45.33 → 48.33s at 3s sampling)
+- [x] **Overlay correctly absent, and says why** — `overlay=none`, with
+      *"GNOME Wayland has no overlay surface for us — the chime and the tray
+      are the nudge here, by design"* printed at startup
+- [x] **The full loop runs** — `scheduler_started 20:30:44` →
+      `nudge_fired 20:31:44`, exactly 60s, on an isolated `XDG_DATA_HOME`
+- [x] **`ext-idle-notify-v1` confirmed absent at runtime** — forcing
+      `SCOOT_IDLE_SOURCE=ext-idle-notify` fell through to the Mutter monitor.
+      A second, independent confirmation of the static `libmutter` finding
+
+**What this does and does not prove.** It exercises every Linux-specific code
+path the cell uses: session detection, the Wayland idle source, SNI
+registration, overlay absence, and the scheduler loop. It is **not** a login
+session, so it does not cover autostart under Wayland, lock/sleep under
+Wayland, idle tracking across a whole real session, or multi-monitor
+placement. Those stay in §9.
+
+### Why the real Wayland login is blocked
+
+Not a Scoot problem: **LightDM 1.30 lists Wayland sessions but cannot launch
+them.** Three consecutive attempts are in `/var/log/lightdm/lightdm.log`:
+
+```
+DEBUG: Greeter requests session ubuntu-wayland
+DEBUG: Running command /usr/sbin/lightdm-session env GNOME_SHELL_SESSION_MODE=ubuntu \
+       /usr/bin/gnome-session --session=ubuntu
+DEBUG: XServer 0: X server stopped
+```
+
+It runs the X11 launch path — no `XDG_SESSION_TYPE=wayland`, no Wayland
+socket — and tears down the X server the session was attached to, so
+gnome-session dies straight back to the greeter. Ubuntu's Wayland session
+expects **GDM3**, which is installed but not the active display manager.
 
 ## 8. Verifying another cell
 
@@ -247,7 +312,7 @@ not take on a production box.
 
 | Check | Why it needs a human | What it would prove |
 |---|---|---|
-| **The whole GNOME Wayland cell** | Requires logging the graphical session out and back in as Wayland | The primary cell end-to-end: tray, chime, Mutter idle, `overlay=none` |
+| **GNOME Wayland as a real login session** | Blocked on LightDM (§7b); needs the display manager switched to GDM3, which costs a reboot on a production box | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
 | **XFCE X11 cell** | Needs an XFCE session installed and logged into | The third acceptance cell |
 | **Screen lock across a deadline** | Locking the live session | `Lock`/`Unlock` → suspend/resume, and no stale nudge on return |
 | **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh |
