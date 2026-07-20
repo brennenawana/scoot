@@ -398,10 +398,19 @@ not take on a production box.
 
 | Check | Why it needs a human | What it would prove |
 |---|---|---|
-| **GNOME Wayland as a real login session** | Blocked on LightDM (§7b); needs the display manager switched to GDM3, which costs a reboot on a production box | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
+| **GNOME Wayland as a real login session** | **Staged 2026-07-20, awaiting a reboot** — see below | Autostart, lock/sleep and whole-session idle *under Wayland*. The cell's code paths are already covered by the nested run in §7b |
 | **XFCE X11 as a real login session** | A logout into "Xfce Session" | Autostart, lock/sleep and whole-session idle *under XFCE*. The cell's code paths are already covered by the nested run in §7c |
 | **Suspend across a deadline** | Suspending a production server | `PrepareForSleep` → >30-min absence restarts the interval fresh. Lower risk than it was: lock/unlock is now verified (§5) and rides the same logind listener and the same core transition |
 | **The full honest workday** | A real day of real work | The v0.1 exit bar: zero wrong-moment nudges. In progress 2026-07-19: running at a 20-minute interval with a background job checking for >= 2 nudges after an hour |
+
+**The GDM3 switch is staged** (2026-07-20), taking effect at the next reboot;
+the running LightDM session was deliberately left untouched. Three changes:
+`ubuntu-wayland.desktop`'s diversion removed so the session reappears in the
+menu, `WaylandEnable=true` in `/etc/gdm3/custom.conf`, and
+`/etc/X11/default-display-manager` plus the `display-manager.service` symlink
+repointed at GDM. Originals are backed up in `/root/scoot-dm-backup-20260720/`
+with a `revert.sh` that restores LightDM exactly. After the reboot the login
+menu offers **Ubuntu on Xorg**, **Ubuntu on Wayland** and **Xfce Session**.
 
 **A note on scope.** An earlier draft of the exit bar read "never nudging
 while OBS records". That was development hygiene — keeping the buddy out of a
