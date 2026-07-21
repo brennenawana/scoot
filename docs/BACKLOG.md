@@ -17,14 +17,19 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
 - [ ] **v0.2 exit evidence**: first-session naming rate >60% among friends &
       family (ROADMAP). Local experimentation does not close this gate.
 
-## 2. Distribution (parked by choice, 2026-07-18)
+## 2. Distribution
 
-- [ ] Apple Developer Program enrollment → Developer ID Application cert
-      (none on this machine; notarytool has no stored credentials)
-- [ ] Then, per RELEASING.md (~one session once the cert exists): Sparkle
-      auto-updates, first notarized DMG, Homebrew cask
-- [ ] Friends & family build + install note (unsigned zip is acceptable for
-      a close-friends round before notarization exists)
+- [x] Apple Developer Program + Developer ID Application cert (Xargs
+      Technologies LLC) + notary profile — done 2026-07-19/20.
+- [x] First notarized releases — 2026-07-21: Scoot-0.1.0.dmg and
+      Scoot-0.2.0.dmg signed, notarized, stapled, Gatekeeper-verified
+      ("Notarized Developer ID"), attached to the GitHub releases. Note:
+      the account's first submission sat >1.5 days in new-account review;
+      everything after cleared in seconds.
+- [ ] Sparkle auto-updates + Homebrew cask (RELEASING.md) — next
+      distribution chunk.
+- [ ] Friends & family round — now unblocked with zero Gatekeeper
+      friction: send the v0.2.0 DMG link.
 
 ## 3. Known v0.2 simplifications (flagged at build time)
 
