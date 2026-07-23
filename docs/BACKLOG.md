@@ -28,8 +28,14 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       everything after cleared in seconds.
 - [ ] Sparkle auto-updates + Homebrew cask (RELEASING.md) — next
       distribution chunk.
-- [ ] Friends & family round — now unblocked with zero Gatekeeper
-      friction: send the v0.2.0 DMG link.
+- [ ] Friends & family round — Gatekeeper friction is zero, but found
+      2026-07-23: **the repo is private, so release links 404 for anyone
+      else.** Before sending links, either make the repo public, or
+      distribute another way (send the DMG file directly, a public
+      releases-only repo, or a download page). Brennen's call.
+- [x] v0.3.0-pre.1 pre-release — 2026-07-23: notarized DMG of the v0.3
+      early build (auto-credit all styles, reveal replay, dark manifest),
+      built for the dogfood-as-a-friend install on Brennen's Mac.
 
 ## 3. Known v0.2 simplifications (flagged at build time)
 
