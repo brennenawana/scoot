@@ -103,7 +103,37 @@ tags + GitHub releases with honest notes (including what's still open).
 Commits are plain, descriptive, and explain *why* — the history is
 documentation too.
 
-## 8. Amendments
+## 8. The save file belongs to the user; trust boundaries, not tamper-proofing
+
+`collection.json` is plain, human-readable JSON, and anyone can edit it to
+grant themselves every buddy. This is a decision, not an oversight
+(amended 2026-07-23, after Brennen raised it directly):
+
+- **Locally, there is no victim.** Scoot is single-player and offline;
+  editing your own save is cheating at solitaire. "Unexploitable on the
+  user's own machine" is also impossible in principle — any key or checksum
+  ships inside a binary the user owns, so encryption here is theater that
+  breaks real things (backups, migration, the verification harness's staged
+  states, and §5's transparency: human-readable state is a feature).
+- **What actually needs integrity already has it.** The catalog, the odds,
+  the art, and the code live inside the signed app bundle — editing them
+  breaks the Developer ID signature and macOS refuses to launch the app.
+  Content is protected; the diary is the user's.
+- **The rule that scales: a claim is trusted only within the boundary that
+  produced it.** The moment any claim crosses to a shared surface —
+  leaderboards, trading, verified rarity, served exclusive buddies — that
+  surface must not read the save file; it reads server-issued evidence
+  (e.g. pull receipts granted or signed at roll time, a natural extension
+  of LIVEOPS.md's signed-manifest architecture). Unverified brag surfaces
+  (share cards, screenshots) stay unverified on purpose — screenshots were
+  always forgeable.
+- **Robustness, not punishment.** A save referencing unknown species must
+  degrade gracefully (it does: every lookup resolves through the catalog
+  and returns nil for strangers). The app never accuses; a hand-edited
+  save is indistinguishable from a restored backup, and treating either
+  as hostile would harm the honest majority to inconvenience nobody.
+
+## 9. Amendments
 
 This doc changes by explicit commit with reasoning in the message, ideally
 referencing the evidence (an experiment verdict, a verification finding) that
