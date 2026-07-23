@@ -33,9 +33,17 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       else.** Before sending links, either make the repo public, or
       distribute another way (send the DMG file directly, a public
       releases-only repo, or a download page). Brennen's call.
-- [x] v0.3.0-pre.1 pre-release — 2026-07-23: notarized DMG of the v0.3
+- [x] v0.3.0-pre.2 pre-release — 2026-07-23: notarized DMG of the v0.3
       early build (auto-credit all styles, reveal replay, dark manifest),
-      built for the dogfood-as-a-friend install on Brennen's Mac.
+      built for the dogfood-as-a-friend install on Brennen's Mac. pre.1
+      was deleted: it crashed at launch (make-app.sh omitted
+      Scoot_ScootCore.bundle; debug builds masked it via SPM's .build-path
+      fallback). Fallout handled: **v0.2.0's DMG had shipped with the same
+      crash** — asset rebuilt from release/v0.2 + fix (71d9d71),
+      launch-verified, replaced on the release. v0.1.0's published DMG
+      launch-tested OK (no ScootCore resources at that tag). RELEASING.md
+      now has a mandatory launch gate: staple ≠ works; run the exact
+      stapled app before uploading.
 
 ## 3. Known v0.2 simplifications (flagged at build time)
 
