@@ -31,6 +31,17 @@ scripts/make-dmg.sh                 # DMG → sign → notarize → staple DMG
 ```
 
 Sanity: `spctl -a -vv dist/Scoot.app` must say `accepted … Notarized Developer ID`.
+
+**Launch gate (mandatory — learned 2026-07-23):** signing, notarization, and
+`spctl` prove *identity*, not *function* — none of them ever run the app. Launch
+the exact stapled `dist/Scoot.app` once and confirm it reaches the menu bar
+before uploading anything. The v0.2.0 DMG shipped crash-on-launch because
+`make-app.sh` omitted `Scoot_ScootCore.bundle`: debug builds hid it (SPM's debug
+`Bundle.module` falls back to the absolute `.build/` path, so the dev machine
+always finds resources) and release-mode `Bundle.module` looks only in
+`Contents/Resources/`. A fresh-user launch test is the only check that catches
+this class of bug.
+
 Upload the DMG to the GitHub Release; the site links the latest.
 
 ## Sparkle (arrives v0.2) — the part everyone gets wrong
