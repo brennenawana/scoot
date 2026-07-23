@@ -10,9 +10,14 @@ squash / bob), plus hand-authored signature frames where a species earns one
 Outputs (committed; re-run to regenerate):
   Sources/Scoot/Resources/Sprites/buddy-<id>.png / .json   for all 12 species
   docs/assets/cast-preview.png                             art-direction sheet
+  Sources/Scoot/Resources/Sprites/mystery.png / .json      pre-roll "?" placeholder
+  Sources/Scoot/Resources/MenuBar/mystery-menubar(@2x).png the "?" menu-bar atlas
 
 Species ids and sheet names must match Sources/ScootCore/Resources/
 buddy-catalog.json — the manifest is the contract, this script is content.
+"mystery" is deliberately NOT a species: it's the pre-roll placeholder
+(docs/BACKLOG.md §3d) and is never added to CAST or buddy-catalog.json, so
+it can't be rolled.
 """
 
 import json
@@ -662,6 +667,68 @@ CAST = [
     THUNDERCLOUD,
 ]
 
+# --------------------------------------------------------- the mystery "?" ---
+# The pre-roll placeholder (docs/BACKLOG.md §3d "the '?' is the front door"):
+# what the menu-bar blob shows before a first pull. NOT a species -- deliberately
+# left out of CAST and out of buddy-catalog.json, so it can never be rolled.
+# A featureless, lopsided lump (NOT the symmetric dome that's Round Blob's
+# signature -- no face, no species tells) with a "?" mark floating above it,
+# same trick as Skater Robot's antenna bobble: a solid-color mark read by its
+# silhouette alone, so it survives recolor_template intact. "Something lives
+# here, but you haven't met it yet" -- inviting, not spooky.
+MYSTERY = {
+    "id": "mystery",
+    "palette": {
+        ".": (0, 0, 0, 0),
+        "o": OUTLINE,
+        "G": (176, 182, 196, 255),  # body -- cool neutral grey, no species owns grey
+        "H": (214, 218, 228, 255),  # highlight
+        "D": (140, 145, 160, 255),  # underside shade
+        "Q": (255, 205, 120, 255),  # the "?" mark -- warm amber, inviting not spooky
+    },
+    # Hand-authored small grid (not a downscale of "idle") -- chunkier, reads
+    # at 18px. Rows 0-8 are the "?" hook + gap; rows 9-15 the lump, widest
+    # row shifted left so the silhouette leans instead of sitting symmetric.
+    "menubar": [
+        "................",
+        "......QQQ.......",
+        ".....Q...Q......",
+        ".........Q......",
+        "........Q.......",
+        ".......Q........",
+        "................",
+        ".......Q........",
+        "................",
+        ".....oGGo.......",
+        "....oGGGGo......",
+        "...oHHGGGGo.....",
+        "..oGGGGGGGGo....",
+        ".oGGGGGGGGGGo...",
+        "...oDDDDDDDDo...",
+        "....oDDDDDDo....",
+    ],
+    # Same "?" + same lean, one row shorter (row 15 stays blank) so the
+    # gentle bob has headroom to sink without clipping the base.
+    "idle": [
+        "................",
+        "......QQQ.......",
+        ".....Q...Q......",
+        ".........Q......",
+        "........Q.......",
+        ".......Q........",
+        "................",
+        ".......Q........",
+        "................",
+        ".....oGGo.......",
+        "....oGGGGo......",
+        "...oHHGGGGo.....",
+        "..oGGGGGGGGo....",
+        ".oGGGGGGGGGGo...",
+        "...oDDDDDDDDo...",
+        "................",
+    ],
+}
+
 
 def dance_frames(species):
     """4 padded frames, 20x16 each. The apron guarantees leans lose nothing."""
@@ -713,6 +780,21 @@ def celebrate_frames(species):
         # wiggle instead of a hop.
         return [vsquash(idle), shear(idle, "left"), shear(idle, "right"), idle]
     return [vsquash(idle), shift_y(idle, -rise), shift_y(idle, -max(1, rise - 1)), idle]
+
+
+def mystery_frames():
+    """4-frame gentle idle bob for the pre-roll "?": rest -> rise -> rest ->
+    sink. No lean or squash like the cast's dance -- it isn't performing,
+    it's just waiting to be met. shift_y only needs a blank row at each
+    canvas edge, which MYSTERY's idle grid keeps clear on purpose (row 0
+    above the "?", row 15 below the lump)."""
+    idle = pad_h(MYSTERY["idle"], APRON)
+    frames = [idle, shift_y(idle, -1), idle, shift_y(idle, 1)]
+    opaque = lambda g: sum(ch != "." for row in g for ch in row)
+    for i, frame in enumerate(frames):
+        assert opaque(frame) == opaque(idle), \
+            f"mystery frame {i} clips art ({opaque(frame)} vs {opaque(idle)})"
+    return frames
 
 
 def write_reveal_pop(path):
@@ -830,6 +912,26 @@ def main():
              for g in [pad_h(species["idle"], APRON)] + frames + cele]
         ))
         mb_preview.append(menubar_atlas(species, 4))
+
+    print("Mystery pre-roll placeholder:")
+    validate(MYSTERY["idle"], MYSTERY["palette"])
+    validate(MYSTERY["menubar"], MYSTERY["palette"])
+    mystery = mystery_frames()
+    write_png(SPRITES / "mystery.png",
+              hstack([grid_to_pixels(g, MYSTERY["palette"], scale=2) for g in mystery]),
+              repo_root=REPO)
+    mmpath = SPRITES / "mystery.json"
+    mmpath.write_text(json.dumps({
+        "name": "mystery",
+        "frameWidth": (16 + 2 * APRON) * 2,
+        "frameHeight": 32,
+        "frameCount": len(mystery),
+        "fps": 6.0,  # gentle -- it isn't dancing yet, just waiting
+    }, indent=2) + "\n")
+    print(f"  wrote {mmpath.relative_to(REPO)}")
+    for scale, suffix in ((1, ""), (2, "@2x")):
+        write_png(MENUBAR / f"mystery-menubar{suffix}.png",
+                  menubar_atlas(MYSTERY, scale), repo_root=REPO)
 
     print("Sound:")
     write_reveal_pop(REPO / "Sources" / "Scoot" / "Resources" / "Sounds" / "reveal-pop.wav")
