@@ -44,6 +44,13 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       launch-tested OK (no ScootCore resources at that tag). RELEASING.md
       now has a mandatory launch gate: staple ≠ works; run the exact
       stapled app before uploading.
+- [x] v0.3.0-pre.3 pre-release — 2026-07-23: the FTUE build (§3d), whole
+      pipeline agent-built (Fable planning, Opus/Sonnet execution) in one
+      day: design → art → core → shell → 7/7 live verification → notarized
+      DMG. Launch gate doubled as an FTUE smoke test (fresh state:
+      onboarding_started, no scheduler_started). Installed friend-style on
+      Brennen's Mac with a clean slate; the Wilbur save is parked at
+      ~/Library/Application Support/Scoot.wilbur-2026-07-23.
 
 ## 3. Known v0.2 simplifications (flagged at build time)
 
@@ -63,8 +70,10 @@ verdict that closed them. (Ledger started 2026-07-18, at v0.2.)
       wants blink, sleep (the Resting zzz — menu bar currently just shows the
       static silhouette), and a true per-species wave (timeout currently
       reuses a slow dance sway).
-- [ ] **Naming-field polish**: suggestion text isn't pre-selected on focus;
-      replacing it takes a cmd+A first.
+- [x] **Naming-field polish** — closed 2026-07-23: the reveal field
+      pre-selects its suggestion on focus (dd47557) and prefills the exact
+      stored name rather than a second independent pick (07f3941);
+      live-verified (typed name replaces the suggestion wholesale).
 
 ## 3b. Ports (PRD written, execution mostly gated — see PORTS.md)
 
@@ -153,10 +162,21 @@ round — it directly moves the naming-rate metric the round exists to
 measure (§1). Stays a plug-in feature; first-launch-once, never on
 relaunch/login.
 
+**Built and verified 2026-07-23.** Core 0639196 · art a563625 · shell
+dd47557 · naming-consistency fix 07f3941 · design card c07b803 (synced to
+the Claude Design project). Live-verified end-to-end the same day, 7/7
+scenarios: fresh install, resume-at-"?", the full funnel (scheduler held
+through roll *and* naming, released on Got it — onboarding_completed then
+scheduler_started), mid-funnel resume, grandfathering against the real
+pre-FTUE save, the unplug test, full suite (84) — zero crashes. Open
+decisions resolved: scheduler holds until Got it (shipped); everything
+unhides at .done (shipped); the first pull stays a **random Common** — the
+deterministic Round-Blob starter is parked as a future manifest-experiment
+candidate. Ships in v0.3.0-pre.3.
+
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
-Onboarding/FTUE (design settled in §3d — scheduling still v0.4 unless
-pulled forward) · share cards + GIF export ·
+Share cards + GIF export ·
 meeting/camera/screen-share detection · pre-tell · snooze ·
 quiet hours / workday schedule.
 
