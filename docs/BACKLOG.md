@@ -125,8 +125,25 @@ next beat. The flow:
    scoots; scoots earn rolls; more friends) — skippable, under a minute
    total, no drawn-out demo; the product is intuitive by this point.
 
+Field evidence (Brennen's fresh install, 2026-07-23, ~20 min in): the
+pre-roll fallback is the *classic v0.1 blob* on every surface (menu bar,
+popover, overlay — AppCoordinator/PopoverView/StatusIconAnimator classic
+fallbacks). It danced, nudged him, and earned him a scoot — then his
+first roll (traffic-cone "Wilbur") replaced it everywhere, and the dex
+showed the character he'd bonded with as a blob-shaped "???" silhouette
+(the catalog's separate Round Blob species). Save state was perfectly
+healthy; the bug is *fictional continuity* — the app introduces a
+character before the pull, then acts like it never existed. The "?"
+pre-roll state fixes this at the root: never show a character you can't
+keep. Decision this forces: **deterministic starter vs random first
+pull** — either the "?" resolves into Round Blob for everyone (mascot
+continuity, Pokémon-starter style; changes the firstRoll contract +
+golden vectors + core-rs) or the first pull stays a random Common
+(variety across friends, "what did you get?"; no contract change).
+
 Open decisions: does the scheduler hold until the first pull (leaning
-yes — nudges from an app you haven't "started" are noise); "?" persists
+yes — now evidenced: he got a full nudge cycle 16 minutes before his
+first roll, i.e. nudged by an app he hadn't "started"); "?" persists
 until naming completes, and the flow resumes if quit mid-way; when
 hidden surfaces unhide (leaning: everything at onboarding-complete —
 only gate what's honestly empty, don't drip-feed a utility app); every
