@@ -104,7 +104,15 @@ mechanics are an experiment family and interact with E2 (roll cadence).
 
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
-Onboarding flow proper (roll-first) · share cards + GIF export ·
+Onboarding flow proper (roll-first — sharpened by the 2026-07-23 dogfood
+install, Brennen: on first open the menu-bar blob is a **question mark**,
+and you have to roll to even start — the mystery icon is the hook, the
+first reveal is the front door, and the app doesn't begin until you've
+pulled and named. Clicking the "?" triggers the first roll/reveal, which
+also teaches where the app lives; the naming moment lands in the first
+thirty seconds. Pre-roll state = "?" everywhere a buddy would appear.
+Must be first-launch-once only — never on relaunch/login — and stay a
+plug-in feature) · share cards + GIF export ·
 meeting/camera/screen-share detection · pre-tell · snooze ·
 quiet hours / workday schedule.
 
