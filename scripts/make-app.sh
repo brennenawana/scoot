@@ -32,13 +32,19 @@ cp "$BIN_PATH/Scoot" "$APP/Contents/MacOS/Scoot"
 cp Support/Info.plist "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
-# SPM resource bundle (sprites, sounds, menu bar icons). Bundle.module finds it
-# in Contents/Resources/ at runtime.
-if [[ -d "$BIN_PATH/Scoot_Scoot.bundle" ]]; then
-  cp -R "$BIN_PATH/Scoot_Scoot.bundle" "$APP/Contents/Resources/"
-else
-  echo "warning: Scoot_Scoot.bundle not found in $BIN_PATH" >&2
+# SPM resource bundles — one per target that declares resources (Scoot: sprites,
+# sounds, icons; ScootCore: buddy catalog). Release-mode Bundle.module resolves
+# them ONLY from Contents/Resources/ — debug builds also fall back to the
+# absolute .build path, which masks a missing bundle on the dev machine and
+# crashes at launch everywhere else. Copy them all; missing bundles are fatal.
+BUNDLES=("$BIN_PATH"/*.bundle)
+if [[ ! -d "${BUNDLES[0]}" ]]; then
+  echo "error: no resource bundles found in $BIN_PATH — the app would crash at launch" >&2
+  exit 1
 fi
+for bundle in "${BUNDLES[@]}"; do
+  cp -R "$bundle" "$APP/Contents/Resources/"
+done
 
 # Version stamp from the latest tag when one exists (v0.1.0 -> 0.1.0).
 if TAG="$(git describe --tags --abbrev=0 2>/dev/null)"; then
