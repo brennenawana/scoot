@@ -1,0 +1,235 @@
+<!-- @dsCard group="FTUE" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scoot — FTUE: the “?” is the front door</title>
+<style>
+  :root { --bg:#f5f5f7; --panel:#fff; --text:#1d1d1f; --muted:#6e6e73; --hairline:rgba(0,0,0,.08); --accent:#e8674b; --well:#ececef; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1e1e20; --panel:#2a2a2c; --text:#f5f5f7; --muted:#98989d; --hairline:rgba(255,255,255,.1); --accent:#ff8a70; --well:#232325; }
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); padding:28px;
+         font:13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+  h1 { font-size:20px; font-weight:700; }
+  .sub { color:var(--muted); margin:4px 0 20px; max-width:720px; }
+  h2 { font-size:13px; font-weight:700; margin:26px 0 4px; }
+  h3 { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted);
+       font-weight:600; margin:16px 0 8px; }
+  .beat-sub { color:var(--muted); font-size:11.5px; max-width:720px; margin-bottom:12px; }
+  .row { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+
+  /* ---- menu bar strip (real mystery/species atlases) ---- */
+  .bar { display:flex; align-items:center; gap:18px; height:32px; padding:0 16px;
+         border-radius:8px; max-width:460px; margin-bottom:8px; }
+  .bar.light { background:linear-gradient(#fbfbfd,#f1f1f4); border:1px solid rgba(0,0,0,.1); color:#1d1d1f; }
+  .bar.dark { background:linear-gradient(#3a3a3e,#2c2c30); border:1px solid rgba(255,255,255,.08); color:#f5f5f7; }
+  .bar .clock { margin-left:auto; font-size:12px; opacity:.8; }
+  .st { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .st small { font-size:9px; letter-spacing:.4px; text-transform:uppercase; opacity:.65; }
+  /* mystery-menubar.png / buddy-<id>-menubar.png: 5×18px frames — 0 idle silhouette, 1-4 bounce */
+  .icon { width:18px; height:18px; image-rendering:pixelated; display:block; background-repeat:no-repeat; }
+  .icon.mystery { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAAASCAYAAADbo8kDAAAA1UlEQVR42u2WwQmFQAxEtxyxhd+YRXixA0v4p1/Bv3r14Nk+IgqCiKyrmSWDJjCgh31MJmHZEF5Y0lWyKnjlCWh/VstCDUw2Mg8ZFRCCAx3YyT9V8FaMLCyWO/GpHHXISFMesoExrxdtIu1Ge5Fv9Kcs5Pv7L5q/n8LZv6FNt3rblKY5Ns5RyLfD1k5+PtMP4yJNc2ycWMiXw9ZO/uj8HR4bJyXk5LC1k09pKpWHCAjpRy4qu6GVVzdtVDEOmx/4ViMNxVgIhoUf6D2NNIR6vTD58cpQE9XPJp9jUcaGAAAAAElFTkSuQmCC); }
+  .icon.beancat { background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAAASCAYAAADbo8kDAAAA9ElEQVR42mNgGAWjgJrAWkvjPwiTKjcaQCQGEEjd/+0LMNTjEqdHhP2HYlLlaBbQlAYQSM3780vhGKYHlzg9Igw5MP8TKU7TQKZGAA02c9ADEzlQcYnTNIuhewDmCWxiQ8kcXAH6n9yApiSLYfMAPowvUgeTOaQGMt7ApkbMw9RrS0vg9AyyHKEAGizmUC2gaZmCpoWYDXlzqB7Q1EpB/+e14TQHWW6omEPTFE1uCrq2uoKoXAFSN1TMoXpAUyPmYZ4jhImpWAeTOQzUqgipFfPITUF8mJQe3WAxh4FaTTtqxTy1u/LUCKBRMApGwSgYBcMLAAB1q2NEe1ExGAAAAABJRU5ErkJggg==); }
+  .icon.idle { background-position:0 0; }
+  .icon.burst { background-position:-18px 0; animation:burst .48s steps(4) infinite; }
+  @keyframes burst { to { background-position:-90px 0; } }
+  .arrow { font-size:15px; color:var(--muted); align-self:center; }
+  /* the raw 90×18 atlas, shown at ×3 for reference, same convention as the cast-sheet's mbrow */
+  .atlasref { display:flex; gap:10px; align-items:center; margin:10px 0 4px; }
+  .atlasref img { width:270px; image-rendering:pixelated; border-radius:6px; border:1px solid var(--hairline); }
+  .atlasref small { color:var(--muted); font-size:10.5px; max-width:280px; }
+
+  /* ---- popover mocks ---- */
+  .pop { width:250px; background:var(--panel); border:1px solid var(--hairline); border-radius:12px;
+         box-shadow:0 14px 40px rgba(0,0,0,.16); padding:14px; text-align:center; }
+  .pop h4 { font-size:10.5px; color:var(--muted); font-weight:600; margin-bottom:10px; letter-spacing:.3px; }
+  .stage { height:70px; display:flex; align-items:center; justify-content:center; }
+  .myst { width:40px; height:32px; image-rendering:pixelated; background-repeat:no-repeat;
+          transform:scale(2); transform-origin:center;
+          background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAAgCAYAAACVf3P1AAAA9UlEQVR42u3YsQ3CQBBEUZeDaIHGKIKEDiiBiApISQmI6eMQgQMjEEhY8u7eG2kTEkYzfy7wMBRXu2zbuxuIAEhlC/7mI5pPAwGg/DKCF73gqP4MBIAArPxCRzWaJUADASAAMwIIPD4ZU2x/Pn0+AB5jAORTcPIjAfaXn4LlJ0D5URRt1qv2vOPpPLnxdwkZCAABWK/gT76y+DQQAAIwI3hLBzn+3/V2n1xUnwYCQABmAjBqwb8WGsWngQAQgJkAjFrwXL6y+Ox2IAAE4CK+shT86ne3P/x1c/kzEAACsNALHa7grN9PDQSAAMwIIBmIB4bKAfgAJ2VXZ3ak0UcAAAAASUVORK5CYII=);
+          animation:mystbob .67s steps(4) infinite; }
+  @keyframes mystbob { to { background-position:-160px 0; } }
+  .cta { font-size:12px; font-weight:600; color:#fff; background:var(--accent);
+         padding:6px 14px; border-radius:6px; display:inline-block; margin-top:4px; }
+  .foot-hidden { border-top:1px dashed var(--hairline); margin-top:10px; padding-top:8px;
+                 font-size:10px; color:var(--muted); font-style:italic; }
+  .quitmenu { width:150px; background:var(--panel); border:1px solid var(--hairline); border-radius:8px;
+              box-shadow:0 10px 28px rgba(0,0,0,.18); padding:5px; font-size:12px; }
+  .quitmenu .item { padding:5px 9px; border-radius:5px; display:flex; justify-content:space-between; }
+  .quitmenu .item.ghost { color:var(--muted); opacity:.35; }
+  .quitmenu .sep { border-top:1px solid var(--hairline); margin:4px 2px; }
+
+  /* ---- pitch card / meter ---- */
+  .meterrow { display:flex; gap:5px; justify-content:center; margin:6px 0 4px; }
+  .pip { width:9px; height:9px; border-radius:50%; background:var(--well); border:1px solid var(--hairline); }
+  .metercap { font-size:10px; color:var(--muted); margin-bottom:10px; }
+  .pitchcard { background:color-mix(in srgb, var(--text) 5%, transparent); border-radius:8px;
+               padding:9px 10px; text-align:left; }
+  .pitchcard p { font-size:11px; line-height:1.4; }
+  .pitchcard b { font-weight:600; }
+  .gotit { margin-top:8px; font-size:11px; font-weight:600; color:#fff; background:var(--accent);
+           padding:5px 0; border-radius:6px; text-align:center; }
+
+  /* ---- naming pre-select mini mock ---- */
+  .namefield { display:inline-block; width:150px; background:#232327; border:1px solid #3a3a40;
+               border-radius:7px; color:#e8e8ec; font-size:11.5px; padding:5px 9px; text-align:center; }
+  .namefield .sel { background:#3b6fd9; border-radius:2px; padding:0 1px; }
+
+  .notes { color:var(--muted); font-size:11.5px; margin-top:22px; max-width:720px; border-top:1px solid var(--hairline); padding-top:14px; }
+  .notes b { color:var(--text); }
+  .notes + .notes { border-top:none; padding-top:0; margin-top:8px; }
+  code { font-family:ui-monospace,monospace; font-size:10.5px; background:var(--well); padding:1px 4px; border-radius:4px; }
+  .seealso { font-size:11.5px; color:var(--muted); background:var(--well); border-radius:8px; padding:8px 12px; max-width:600px; }
+</style>
+</head>
+<body>
+  <h1>FTUE — the “?” is the front door</h1>
+  <p class="sub">docs/BACKLOG.md §3d, landed dd47557. Dopamine first, explanation after: a fresh
+  install meets one action, not a menu bar's worth of features it hasn't earned yet. The
+  transformation from “?” to a named buddy <em>is</em> the tutorial — nothing here is drip-fed,
+  everything hidden is honestly empty until the funnel completes.</p>
+
+  <h2>1 — The “?” front door</h2>
+  <p class="beat-sub">Fresh install, zero buddies owned (<code>OnboardingStage.firstRoll</code>).
+  The menu bar shows a mystery blob, not the classic v0.1 dance — this is what fixed the
+  fictional-continuity bug Brennen hit dogfooding (§3d field evidence): never show a character
+  before it's earned.</p>
+
+  <div class="row">
+    <div>
+      <h3>Menu bar — idle “?”</h3>
+      <div class="bar light"><div class="st"><span class="icon mystery idle"></span><small>calm</small></div><span class="clock">Thu 09:41</span></div>
+      <div class="bar dark"><div class="st"><span class="icon mystery idle"></span><small>calm</small></div><span class="clock">Thu 09:41</span></div>
+      <div class="atlasref">
+        <img alt="mystery-menubar.png real atlas" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAAASCAYAAADbo8kDAAAA1UlEQVR42u2WwQmFQAxEtxyxhd+YRXixA0v4p1/Bv3r14Nk+IgqCiKyrmSWDJjCgh31MJmHZEF5Y0lWyKnjlCWh/VstCDUw2Mg8ZFRCCAx3YyT9V8FaMLCyWO/GpHHXISFMesoExrxdtIu1Ge5Fv9Kcs5Pv7L5q/n8LZv6FNt3rblKY5Ns5RyLfD1k5+PtMP4yJNc2ycWMiXw9ZO/uj8HR4bJyXk5LC1k09pKpWHCAjpRy4qu6GVVzdtVDEOmx/4ViMNxVgIhoUf6D2NNIR6vTD58cpQE9XPJp9jUcaGAAAAAElFTkSuQmCC">
+        <small>The real asset: <code>Resources/MenuBar/mystery-menubar.png</code>, 90×18px = 5
+        frames. Frame 0 is the idle template silhouette shown above (follows dark mode + bar
+        tint); frames 1–4 are the colored bounce — same five-frame contract every species'
+        <code>&lt;id&gt;-menubar.png</code> uses, so the “?” slots into the existing icon
+        pipeline rather than a bespoke one.</small>
+      </div>
+    </div>
+
+    <div class="pop">
+      <h4>POPOVER — CHROME HIDDEN</h4>
+      <div class="stage"><div class="myst"></div></div>
+      <div class="cta">Roll your first buddy</div>
+      <div class="foot-hidden">no countdown · no Nudge Now / Pause · no divider · no Scootdex /
+      Settings / Quit row — <code>PopoverView.chromeHidden</code> strips everything but the
+      portrait and the one CTA</div>
+    </div>
+
+    <div>
+      <h3>Right-click quick menu</h3>
+      <div class="quitmenu">
+        <div class="item ghost"><span>Nudge Now</span></div>
+        <div class="item ghost"><span>Pause 1 Hour</span></div>
+        <div class="item ghost"><span>Settings…</span></div>
+        <div class="sep"></div>
+        <div class="item"><b>Quit Scoot</b><span>⌘Q</span></div>
+      </div>
+      <p class="beat-sub" style="margin-top:8px;max-width:220px">Onboarding never traps you:
+      <code>StatusItemController.menuNeedsUpdate</code> rebuilds to Quit-only while
+      <code>baseItemsHidden()</code> is true — the ghosted rows above don't exist in the real
+      menu, shown here only to name what's missing.</p>
+    </div>
+  </div>
+  <p class="beat-sub" style="margin-top:4px"><b style="color:var(--text)">Scheduler held:</b>
+  <code>OnboardingStage.holdsNudges</code> is true for both <code>.firstRoll</code> and
+  <code>.pitch</code> — <code>AppCoordinator.startSchedulerIfReady()</code> won't call
+  <code>scheduler.start()</code> until every feature lets go. The app that nudged Brennen 16
+  minutes before his first roll (§3d field evidence) can no longer do that to anyone.</p>
+
+  <h2>2 — Roll → reveal → naming</h2>
+  <p class="beat-sub">The reveal window is still the front door — see
+  <b style="color:var(--text)">design/surfaces/reveal-flow.html</b> for the full six-beat
+  storyboard (capsule → meet → name → done); it's not re-drawn here. What's new since that card
+  was authored:</p>
+  <div class="row" style="align-items:center">
+    <div class="namefield">R<span class="sel">une</span></div>
+    <p class="beat-sub" style="margin:0;max-width:420px">
+      <b style="color:var(--text)">The suggestion is pre-selected on focus.</b> Naming used to
+      need a cmd+A before typing over the suggested name; <code>RevealView</code> now calls
+      <code>NSText.selectAll(nil)</code> on the field editor one runloop turn after
+      <code>@FocusState</code> lands, so the first keystroke replaces the whole suggestion —
+      the fix this milestone lives on, since naming-in-the-first-30-seconds is the funnel's one
+      metric. (BACKLOG.md §3's “suggestion text isn't pre-selected” line is now stale — the code
+      comment cites it directly, but the checkbox was never flipped.)
+    </p>
+  </div>
+  <p class="seealso" style="margin-top:10px"><b>Also resolved</b> — §3d's open question
+  “deterministic starter vs random first pull”: <code>RollEngine.firstRoll</code> restricts the
+  draw to the Common pool, then rolls uniformly within it. Not a fixed Round-Blob starter —
+  every friend still gets a “what did you get?” moment, just guaranteed-charming rarity.</p>
+
+  <h2>3 — The payoff beat: “?” becomes the buddy</h2>
+  <p class="beat-sub">The reveal window's <code>onDismiss</code> flips the icon set from mystery
+  to the real species <em>before</em> the burst plays, then punches it with the same
+  <code>playBurst(duration: 1.2)</code> used for everyday scoot-credit celebrations (10fps frame
+  swap) — no bespoke onboarding animation, just the ordinary celebrate beat aimed at the
+  biggest possible moment: the icon you've been idly glancing at all funnel long is suddenly
+  <em>your</em> buddy.</p>
+  <div class="bar light" style="max-width:620px">
+    <div class="st"><span class="icon mystery idle"></span><small>before</small></div>
+    <div class="arrow">→</div>
+    <div class="st"><span class="icon mystery burst"></span><small>burst (1.2s)</small></div>
+    <div class="arrow">→</div>
+    <div class="st"><span class="icon beancat idle"></span><small>named buddy</small></div>
+    <span class="clock">Thu 09:44</span>
+  </div>
+  <p class="beat-sub" style="max-width:620px">Bean Cat shown only as a stand-in for “whichever
+  Common you rolled” — see beat 2's resolved open question. The named buddy's idle frame is the
+  same template-silhouette-vs-color-bounce atlas contract as the mystery icon; nothing new to
+  build to make the swap work, which is why it could ship as “apply the icon set, then burst”
+  rather than a custom transform animation.</p>
+
+  <h2>4 — The pitch stage: meter debut + the elevator pitch</h2>
+  <p class="beat-sub"><code>OnboardingStage.pitch</code>: one buddy owned, pitch not yet
+  dismissed. The meter appears for the first time ever here, captioned with the usage lesson —
+  the buddy teaches its own loop diegetically before the pitch card spells it out in words.</p>
+  <div class="row">
+    <div class="pop" style="width:270px">
+      <h4>POPOVER — PITCH STAGE</h4>
+      <div class="meterrow"><i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i><i class="pip"></i></div>
+      <div class="metercap">Move when nudged → earn scoots → 5 scoots = your next roll</div>
+      <div class="pitchcard">
+        <p><b>Wilbur</b> lives here now. Every 45 min or so they'll ask you to scoot — stand,
+        stretch, step away. Moving earns scoots; 5 is your next roll, with 11 more friends to
+        find. Nothing leaves your Mac.</p>
+        <div class="gotit">Got it</div>
+      </div>
+    </div>
+    <p class="beat-sub" style="max-width:340px">
+      Copy quoted verbatim from <code>CollectionPopoverSection.pitchCard</code>/<code>pitchStage</code>
+      — “Wilbur” and “11 more friends” are the field-evidence buddy from §3d (traffic-cone,
+      first-ever roll) substituted into <code>buddyName</code> /
+      <code>remainingCount</code> (<code>12 species − 1 found</code>). 36 words, one button,
+      no drawn-out demo — the elevator pitch, not a walkthrough.
+    </p>
+  </div>
+  <p class="beat-sub" style="margin-top:10px"><b style="color:var(--text)">Got it →</b>
+  <code>CollectionManager.dismissPitch()</code> flips <code>pitchDismissed</code> once
+  (write-once, mirrors a UserDefaults date) → stage derives to <code>.done</code> → the same
+  frame that applies the icon also calls <code>startSchedulerIfReady()</code>, which starts the
+  scheduler <em>exactly once</em>, right then → every hidden surface returns together: status
+  line, Nudge Now/Pause/Resume, the divider, Scootdex, Settings, Quit. Nothing drip-feeds in —
+  “only gate what's honestly empty” cuts both ways.</p>
+
+  <p class="notes"><b>Design rationale (§3d):</b> dopamine first, explanation after — the first
+  thing a new user does is pull a lever and watch something land, not read a card. Progressive
+  disclosure by omission, not by tooltip: Scootdex, Settings, the meter, even the full
+  right-click menu don't get grayed-out or badged “locked” — they simply don't exist yet,
+  because there's honestly nothing behind them (no collection, no history, nothing to
+  configure that matters before you've met your first buddy). The transformation <em>is</em>
+  the tutorial: no separate walkthrough teaches “this icon is your buddy,” the icon just
+  becomes one, mid-glance, with a burst to make sure you're looking. And the hold is the
+  quiet fix underneath all of it — an app that nudges you before you've pulled your first buddy
+  is nudging on behalf of a promise it hasn't kept yet.</p>
+  <p class="notes"><b>Funnel telemetry:</b> <code>onboarding_started</code> (first arrival at
+  “?”) and <code>onboarding_completed</code> (Got it) are registered in docs/CONTRACTS.md §8.5
+  — this is the first thing the friends & family round measures (BACKLOG §1/§3d), so every beat
+  above is instrumented, not just the naming moment v0.2 already tracked.</p>
+</body>
+</html>
