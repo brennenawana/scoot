@@ -102,17 +102,44 @@ constitutional risk); hardware (watch/desk device, Arc C) is the true
 movement sensor. Settle empirically once v0.3 telemetry is live — credit
 mechanics are an experiment family and interact with E2 (roll cadence).
 
+## 3d. FTUE design: the "?" is the front door (Brennen, 2026-07-23)
+
+Sketched while dogfooding the friend-style install (which proved the
+problem: even the developer only found his free roll by poking at the
+menu). Dopamine first, explanation after; hide everything that isn't the
+next beat. The flow:
+
+1. **First open: the menu-bar blob is a "?".** Clicking it shows one
+   action — Roll. Scootdex, settings, meter: all hidden. Progressive
+   disclosure; nothing needs explaining because nothing else exists yet.
+2. **Roll → reveal → naming.** The existing reveal theater is the front
+   door; the app doesn't begin until you've pulled. Naming is the v0.2
+   exit-metric moment, now landing inside the first thirty seconds.
+3. **The payoff beat: the "?" becomes the named buddy** in the menu bar —
+   stage-manage attention to it (celebrate pop as it lands). This is the
+   "it lives here now" moment; the transformation is the tutorial.
+4. **A couple more quick dopamine hits** (celebrate animation, the meter
+   appearing with your first goal) to cement excitement — then
+5. **Brief onboarding = elevator pitch + basic usage.** "Why this is
+   awesome" in a few lines (buddy nudges you to move; moving earns
+   scoots; scoots earn rolls; more friends) — skippable, under a minute
+   total, no drawn-out demo; the product is intuitive by this point.
+
+Open decisions: does the scheduler hold until the first pull (leaning
+yes — nudges from an app you haven't "started" are noise); "?" persists
+until naming completes, and the flow resumes if quit mid-way; when
+hidden surfaces unhide (leaning: everything at onboarding-complete —
+only gate what's honestly empty, don't drip-feed a utility app); every
+beat instrumented (onboarding funnel = the first thing the friends
+round measures). Sequencing: consider pulling this ahead of the friends
+round — it directly moves the naming-rate metric the round exists to
+measure (§1). Stays a plug-in feature; first-launch-once, never on
+relaunch/login.
+
 ## 4. v0.4-scheduled, not started (listed here so the set stays visible)
 
-Onboarding flow proper (roll-first — sharpened by the 2026-07-23 dogfood
-install, Brennen: on first open the menu-bar blob is a **question mark**,
-and you have to roll to even start — the mystery icon is the hook, the
-first reveal is the front door, and the app doesn't begin until you've
-pulled and named. Clicking the "?" triggers the first roll/reveal, which
-also teaches where the app lives; the naming moment lands in the first
-thirty seconds. Pre-roll state = "?" everywhere a buddy would appear.
-Must be first-launch-once only — never on relaunch/login — and stay a
-plug-in feature) · share cards + GIF export ·
+Onboarding/FTUE (design settled in §3d — scheduling still v0.4 unless
+pulled forward) · share cards + GIF export ·
 meeting/camera/screen-share detection · pre-tell · snooze ·
 quiet hours / workday schedule.
 
