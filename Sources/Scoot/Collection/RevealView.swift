@@ -12,7 +12,12 @@ struct RevealView: View {
     /// flows into naming; a replay is pure theater for a buddy you own —
     /// same beats, given name on the plate, no naming step.
     enum Mode {
-        case pull(RedeemResult)
+        /// `suggestedName` is the name performRoll already stored for this
+        /// buddy (ScootCore picks it once, atomically, at redeem time) — the
+        /// naming field prefills with it rather than rolling its own, so the
+        /// name the user sees is always the name that ends up saved if they
+        /// don't edit it.
+        case pull(RedeemResult, suggestedName: String)
         case replay(givenName: String)
     }
 
@@ -35,7 +40,7 @@ struct RevealView: View {
     @FocusState private var nameFocused: Bool
 
     private var isDuplicate: Bool {
-        if case .pull(.duplicate) = mode { return true }
+        if case .pull(.duplicate, _) = mode { return true }
         return false
     }
 
@@ -46,6 +51,14 @@ struct RevealView: View {
 
     private var plateName: String {
         if case .replay(let givenName) = mode { return givenName }
+        return species.displayName
+    }
+
+    /// The name to prefill the naming field with — the same string
+    /// performRoll already stored, never a second independent random pick
+    /// (only reachable in `.pull` mode; naming never appears during replay).
+    private var suggestedName: String {
+        if case .pull(_, let suggestedName) = mode { return suggestedName }
         return species.displayName
     }
 
@@ -139,7 +152,7 @@ struct RevealView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    if case .pull(.duplicate(let sparks)) = mode {
+                    if case .pull(.duplicate(let sparks), _) = mode {
                         Text("Duplicate · +\(sparks) ✦ sparks")
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.4))
@@ -188,7 +201,7 @@ struct RevealView: View {
         }
         .onAppear {
             if chosenName.isEmpty {
-                chosenName = species.suggestedNames.randomElement() ?? species.displayName
+                chosenName = suggestedName
             }
             // Keyboard-ready immediately: naming friction is the one metric
             // this milestone lives on.

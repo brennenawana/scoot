@@ -19,9 +19,15 @@ final class RevealWindowController: NSObject, NSWindowDelegate {
             if case .newBuddy(let index) = outcome.result { return index }
             return nil
         }()
+        // performRoll already chose and saved a suggested name for this
+        // buddy; the naming field must prefill with that exact string, not
+        // roll a second independent suggestion (a duplicate never reaches
+        // naming, so the displayName fallback there is never shown).
+        let suggestedName = ownedIndex.flatMap { manager.state.owned.indices.contains($0) ? manager.state.owned[$0].givenName : nil }
+            ?? outcome.species.displayName
         self.init(
             species: outcome.species,
-            mode: .pull(outcome.result),
+            mode: .pull(outcome.result, suggestedName: suggestedName),
             foundLine: "\(manager.foundCount) of \(manager.catalog.species.count) found",
             canSkip: canSkip,
             onName: { name in
