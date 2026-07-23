@@ -16,6 +16,9 @@ struct PopoverView: View {
     var accessory: AnyView? = nil
     /// Feature-supplied leading footer control (v0.2: the Scootdex button).
     var footerAccessory: AnyView? = nil
+    /// Onboarding strips the popover to portrait + accessory (the CTA, then the
+    /// pitch card) — everything else is hidden until the funnel completes (§3d).
+    var chromeHidden: Bool = false
     let onNudgeNow: () -> Void
     let onPause: () -> Void
     let onResume: () -> Void
@@ -30,34 +33,38 @@ struct PopoverView: View {
                 BuddyView(sheet: sheet, fps: 4, scale: 2)
             }
 
-            TimelineView(.periodic(from: .now, by: 1)) { _ in
-                Text(statusLine)
-                    .font(.system(.body, design: .rounded))
-                    .foregroundStyle(.primary)
+            if !chromeHidden {
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    Text(statusLine)
+                        .font(.system(.body, design: .rounded))
+                        .foregroundStyle(.primary)
+                }
             }
 
             if let accessory {
                 accessory
             }
 
-            HStack(spacing: 8) {
-                Button("Nudge Now", action: onNudgeNow)
-                if scheduler.isPaused {
-                    Button("Resume", action: onResume)
-                } else {
-                    Button("Pause 1 Hour", action: onPause)
+            if !chromeHidden {
+                HStack(spacing: 8) {
+                    Button("Nudge Now", action: onNudgeNow)
+                    if scheduler.isPaused {
+                        Button("Resume", action: onResume)
+                    } else {
+                        Button("Pause 1 Hour", action: onPause)
+                    }
                 }
-            }
 
-            Divider()
+                Divider()
 
-            HStack {
-                if let footerAccessory {
-                    footerAccessory
+                HStack {
+                    if let footerAccessory {
+                        footerAccessory
+                    }
+                    Button("Settings…", action: onOpenSettings)
+                    Spacer()
+                    Button("Quit", action: onQuit)
                 }
-                Button("Settings…", action: onOpenSettings)
-                Spacer()
-                Button("Quit", action: onQuit)
             }
         }
         .padding(16)

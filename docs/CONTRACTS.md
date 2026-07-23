@@ -264,7 +264,8 @@ One JSON object per line: `{"name": "...", "props": {"k": "v", …},
 `resumed`, `pause_expired`, `nudge_fired`, `nudge_outcome`,
 `scoot_credited`, `scoot_credit_suppressed`, `roll_ticket_earned`,
 `roll_redeemed`, `buddy_named`, `buddy_activated`, `dex_opened`,
-`reveal_replayed`, `first_roll_granted`, `collection_rescued`,
+`reveal_replayed`, `first_roll_granted`, `onboarding_started`,
+`onboarding_completed`, `collection_rescued`,
 `collection_unavailable`, `collection_save_failed`,
 `experiment_manifest_loaded`.
 
@@ -309,3 +310,6 @@ reachable; within-tier uniformity within 5%).
   as shipped in v0.2/v0.3-dark). Roll engine switched from Swift stdlib
   `Int.random(in:)` to the owned §2 algorithm in the same change — roll
   sequences before this date are not comparable.
+- 2026-07-23: registered the FTUE funnel events `onboarding_started` and
+  `onboarding_completed` (§8.5). Additive telemetry vocabulary only — no
+  vector, format, or algorithm change.

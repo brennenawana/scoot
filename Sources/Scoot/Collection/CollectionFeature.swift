@@ -19,6 +19,11 @@ final class CollectionFeature: NSObject, ScootFeature {
     private var dex: ScootdexWindowController?
     private var stateSink: AnyCancellable?
     private var lastActiveSpeciesID: String?
+    /// The onboarding first pull keeps the "?" in the menu bar through the
+    /// whole reveal, then transforms it into the named buddy on completion —
+    /// these two flags stage-manage that payoff beat (docs/BACKLOG.md §3d).
+    private var onboardingRevealActive = false
+    private var pendingStatusCelebration = false
 
     static func make(settings: SettingsStore, telemetry: TelemetryLogging) -> CollectionFeature? {
         guard let manager = CollectionManager(telemetry: telemetry) else { return nil }
@@ -47,11 +52,20 @@ final class CollectionFeature: NSObject, ScootFeature {
         reveal?.close()
     }
 
+    func holdsNudges() -> Bool {
+        manager.onboardingStage.holdsNudges
+    }
+
     func handlePrimaryOutcome(_ outcome: NudgeOutcome) {
         manager.credit(outcome: outcome)
     }
 
     func popoverPortrait() -> AnyView? {
+        // Pre-roll: the "?" bobs where the buddy will be — never a species,
+        // never the classic blob (docs/BACKLOG.md §3d).
+        if manager.onboardingStage == .firstRoll {
+            return SpriteLibrary.mysterySheet.map { AnyView(BuddyView(sheet: $0, scale: 2)) }
+        }
         guard let species = manager.activeSpecies,
               let sheet = SpriteLibrary.sheet(for: species) else { return nil }
         return AnyView(PortraitFlourishView(
@@ -62,8 +76,11 @@ final class CollectionFeature: NSObject, ScootFeature {
     }
 
     func popoverAccessory() -> AnyView? {
-        AnyView(CollectionPopoverSection(manager: manager,
-                                         onRoll: { [weak self] in self?.startReveal() }))
+        AnyView(CollectionPopoverSection(
+            manager: manager,
+            onRoll: { [weak self] in self?.startReveal() },
+            onDismissPitch: { [weak self] in self?.dismissPitch() }
+        ))
     }
 
     func popoverFooterAccessory() -> AnyView? {
@@ -71,6 +88,9 @@ final class CollectionFeature: NSObject, ScootFeature {
     }
 
     func quickMenuItems() -> [NSMenuItem] {
+        // The dex is honestly empty until onboarding completes — nothing to
+        // browse, so nothing offered (docs/BACKLOG.md §3d).
+        guard manager.onboardingStage == .done else { return [] }
         let item = NSMenuItem(title: "Scootdex…", action: #selector(dexSelected), keyEquivalent: "")
         item.target = self
         return [item]
@@ -85,14 +105,32 @@ final class CollectionFeature: NSObject, ScootFeature {
     }
 
     func statusIcons() -> StatusIconSet? {
-        manager.activeSpecies.flatMap { SpriteLibrary.statusIcons(for: $0) }
+        // "?" until the buddy is pulled AND the reveal has played out — the
+        // menu-bar transformation is the tutorial (docs/BACKLOG.md §3d).
+        if onboardingRevealActive || manager.onboardingStage == .firstRoll {
+            return SpriteLibrary.mysteryStatusIcons()
+        }
+        return manager.activeSpecies.flatMap { SpriteLibrary.statusIcons(for: $0) }
+    }
+
+    func consumeStatusCelebration() -> Bool {
+        defer { pendingStatusCelebration = false }
+        return pendingStatusCelebration
     }
 
     // MARK: - Windows
 
     private func startReveal() {
         guard reveal == nil else { return }
-        guard let outcome = manager.performRoll() else { return }
+        // The very first pull owns the payoff beat: hold the "?" in the menu
+        // bar through the reveal, then let it *become* the named buddy with a
+        // celebrate pop the moment the reveal completes (docs/BACKLOG.md §3d).
+        let isFirstRoll = manager.onboardingStage == .firstRoll
+        if isFirstRoll { onboardingRevealActive = true }
+        guard let outcome = manager.performRoll() else {
+            onboardingRevealActive = false
+            return
+        }
         let controller = RevealWindowController(
             outcome: outcome,
             manager: manager,
@@ -100,10 +138,21 @@ final class CollectionFeature: NSObject, ScootFeature {
             onDismiss: { [weak self] in
                 self?.settings.hasSeenReveal = true
                 self?.reveal = nil
+                guard let self, isFirstRoll else { return }
+                self.onboardingRevealActive = false
+                self.pendingStatusCelebration = true
+                self.onNeedsRefresh?()
             }
         )
         reveal = controller
         controller.show()
+    }
+
+    private func dismissPitch() {
+        // "Got it" completes the funnel; the refresh releases the scheduler
+        // and un-hides the quick menu and dex (docs/BACKLOG.md §3d).
+        manager.dismissPitch()
+        onNeedsRefresh?()
     }
 
     private func openDex() {

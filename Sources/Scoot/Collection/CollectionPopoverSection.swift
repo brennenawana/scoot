@@ -2,20 +2,85 @@
 import SwiftUI
 import ScootCore
 
-/// The earn-loop section of the popover (design/surfaces/roll-meter): the
-/// ticket panel when a roll is waiting, else the meter. Copy counts up,
-/// never down — no countdown pressure on rolls, ever (docs/PRODUCT.md §8).
+/// The onboarding-aware popover body (design/surfaces/roll-meter): the first
+/// pull's single CTA, then the meter's first appearance beside a one-line
+/// pitch, then the steady earn loop. Copy counts up, never down — no countdown
+/// pressure on rolls, ever (docs/PRODUCT.md §8).
 struct CollectionPopoverSection: View {
     @ObservedObject var manager: CollectionManager
     let onRoll: () -> Void
+    let onDismissPitch: () -> Void
 
     var body: some View {
-        VStack(spacing: 6) {
-            if manager.state.rollTickets > 0 {
-                ticketPanel
-            } else {
-                meter
+        VStack(spacing: 10) {
+            switch manager.onboardingStage {
+            case .firstRoll: firstRollCTA
+            case .pitch: pitchStage
+            case .done: earnLoop
             }
+        }
+    }
+
+    // MARK: - Onboarding
+
+    /// Dopamine first, explanation after: one prominent action, nothing else
+    /// (docs/BACKLOG.md §3d).
+    private var firstRollCTA: some View {
+        Button(action: onRoll) {
+            Text("Roll your first buddy")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+    }
+
+    /// The meter debuts here, captioned with the usage lesson, above the brief
+    /// pitch — the buddy earns its keep by teaching the loop diegetically.
+    private var pitchStage: some View {
+        VStack(spacing: 8) {
+            meterPips
+            Text("Move when nudged → earn scoots → 5 scoots = your next roll")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            pitchCard
+        }
+    }
+
+    private var pitchCard: some View {
+        VStack(spacing: 8) {
+            (Text(buddyName).fontWeight(.semibold)
+             + Text(" lives here now. Every 45 min or so they'll ask you to scoot — stand, stretch, step away. Moving earns scoots; 5 is your next roll, with \(remainingCount) more friends to find. Nothing leaves your Mac."))
+                .font(.system(size: 11.5, design: .rounded))
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Got it", action: onDismissPitch)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.05)))
+    }
+
+    private var buddyName: String {
+        manager.state.activeBuddy?.givenName
+            ?? manager.activeSpecies?.displayName
+            ?? "Your buddy"
+    }
+
+    private var remainingCount: Int {
+        max(0, manager.catalog.species.count - manager.foundCount)
+    }
+
+    // MARK: - Steady state
+
+    @ViewBuilder
+    private var earnLoop: some View {
+        if manager.state.rollTickets > 0 {
+            ticketPanel
+        } else {
+            meter
         }
     }
 
@@ -50,17 +115,21 @@ struct CollectionPopoverSection: View {
             : "Your roll is ready — whenever you are."
     }
 
+    private var meterPips: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<CollectionState.meterTarget, id: \.self) { pip in
+                Circle()
+                    .fill(pip < manager.state.meterScoots
+                          ? Color.accentColor
+                          : Color.primary.opacity(0.12))
+                    .frame(width: 9, height: 9)
+            }
+        }
+    }
+
     private var meter: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 5) {
-                ForEach(0..<CollectionState.meterTarget, id: \.self) { pip in
-                    Circle()
-                        .fill(pip < manager.state.meterScoots
-                              ? Color.accentColor
-                              : Color.primary.opacity(0.12))
-                        .frame(width: 9, height: 9)
-                }
-            }
+            meterPips
             Text(meterLine)
                 .font(.system(size: 10.5))
                 .foregroundStyle(.secondary)

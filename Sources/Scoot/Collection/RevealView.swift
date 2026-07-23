@@ -194,6 +194,15 @@ struct RevealView: View {
             // this milestone lives on.
             nameFocused = true
         }
+        .onChange(of: nameFocused) { _, focused in
+            // Pre-select the suggestion so the first keystroke replaces it
+            // wholesale — no cmd+A tax on renaming (docs/BACKLOG.md §3). One
+            // runloop hop lets the field editor attach before we select it.
+            guard focused else { return }
+            DispatchQueue.main.async {
+                (NSApp.keyWindow?.firstResponder as? NSText)?.selectAll(nil)
+            }
+        }
     }
 
     private var doneToast: some View {

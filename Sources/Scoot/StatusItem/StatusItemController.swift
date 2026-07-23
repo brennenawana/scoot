@@ -17,7 +17,10 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     // and a retained NSHostingView keeps TimelineViews ticking — ~8% CPU
     // forever after the first open).
     private let makePopoverContent: () -> NSViewController
-    private let extraMenuItems: [NSMenuItem]
+    // Providers, not snapshots: the quick menu is rebuilt on every open so it
+    // tracks onboarding (extra items appear, base items gate to Quit) (§3d).
+    private let extraMenuItems: () -> [NSMenuItem]
+    private let baseItemsHidden: () -> Bool
 
     private let onNudgeNow: () -> Void
     private let onPause: () -> Void
@@ -26,7 +29,8 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
     private let onQuit: () -> Void
 
     init(makePopoverContent: @escaping () -> NSViewController,
-         extraMenuItems: [NSMenuItem] = [],
+         extraMenuItems: @escaping () -> [NSMenuItem] = { [] },
+         baseItemsHidden: @escaping () -> Bool = { false },
          onNudgeNow: @escaping () -> Void,
          onPause: @escaping () -> Void,
          onResume: @escaping () -> Void,
@@ -34,6 +38,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
          onQuit: @escaping () -> Void) {
         self.makePopoverContent = makePopoverContent
         self.extraMenuItems = extraMenuItems
+        self.baseItemsHidden = baseItemsHidden
         self.onNudgeNow = onNudgeNow
         self.onPause = onPause
         self.onResume = onResume
@@ -56,7 +61,7 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
             button.setAccessibilityLabel("Scoot")
         }
 
-        buildQuickMenu()
+        quickMenu.delegate = self
     }
 
     func celebrate(for outcome: NudgeOutcome) {
@@ -112,14 +117,22 @@ final class StatusItemController: NSObject, NSMenuDelegate, NSPopoverDelegate {
 
     // MARK: - Quick menu
 
-    private func buildQuickMenu() {
-        quickMenu.delegate = self
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu == quickMenu else { return }
+        quickMenu.removeAllItems()
+        // Onboarding never traps the user: Quit always works, and nothing
+        // else is offered until the funnel completes (§3d).
+        guard !baseItemsHidden() else {
+            quickMenu.addItem(makeItem(title: "Quit Scoot", action: #selector(quitSelected), key: "q"))
+            return
+        }
         quickMenu.addItem(makeItem(title: "Nudge Now", action: #selector(nudgeNowSelected)))
         quickMenu.addItem(makeItem(title: "Pause 1 Hour", action: #selector(pauseSelected)))
         quickMenu.addItem(makeItem(title: "Resume", action: #selector(resumeSelected)))
         quickMenu.addItem(.separator())
-        if !extraMenuItems.isEmpty {
-            for item in extraMenuItems { quickMenu.addItem(item) }
+        let extras = extraMenuItems()
+        if !extras.isEmpty {
+            for item in extras { quickMenu.addItem(item) }
             quickMenu.addItem(.separator())
         }
         quickMenu.addItem(makeItem(title: "Settings…", action: #selector(settingsSelected), key: ","))

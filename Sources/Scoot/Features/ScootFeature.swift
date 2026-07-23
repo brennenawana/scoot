@@ -24,6 +24,12 @@ protocol ScootFeature: AnyObject {
     func start()
     func shutdown()
 
+    /// True while the feature wants the scheduler kept quiet — v0.2.x's
+    /// onboarding holds nudges until the first pull is named and the pitch
+    /// dismissed (docs/BACKLOG.md §3d). The coordinator starts the scheduler
+    /// the moment every feature has let go, exactly once.
+    func holdsNudges() -> Bool
+
     /// The primary nudge outcome, once per fired nudge — the earn loop's
     /// input (movementDetected/acknowledged credit scoots in v0.2).
     func handlePrimaryOutcome(_ outcome: NudgeOutcome)
@@ -44,11 +50,16 @@ protocol ScootFeature: AnyObject {
     func activeCelebrateSheet() -> SpriteSheet?
     /// Menu bar icon override derived from the active buddy.
     func statusIcons() -> StatusIconSet?
+    /// A one-shot request, consumed on read, to punctuate a menu-bar icon
+    /// swap with the burst animation — the FTUE payoff beat, the "?" becoming
+    /// the named buddy (docs/BACKLOG.md §3d). Pulled right after icons reapply.
+    func consumeStatusCelebration() -> Bool
 }
 
 extension ScootFeature {
     func start() {}
     func shutdown() {}
+    func holdsNudges() -> Bool { false }
     func handlePrimaryOutcome(_ outcome: NudgeOutcome) {}
     func popoverPortrait() -> AnyView? { nil }
     func popoverAccessory() -> AnyView? { nil }
@@ -57,5 +68,6 @@ extension ScootFeature {
     func activeSpriteSheet() -> SpriteSheet? { nil }
     func activeCelebrateSheet() -> SpriteSheet? { nil }
     func statusIcons() -> StatusIconSet? { nil }
+    func consumeStatusCelebration() -> Bool { false }
 }
 #endif

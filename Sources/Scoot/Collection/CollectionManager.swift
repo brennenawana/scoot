@@ -16,6 +16,15 @@ final class CollectionManager: ObservableObject {
 
     private let store: JSONCollectionStore
     private let telemetry: TelemetryLogging
+
+    /// The onboarding funnel is two write-once dates in standard defaults
+    /// (docs/BACKLOG.md §3d); the stage itself is always derived, never
+    /// stored. `pitchDismissed` is the only funnel bit the derivation needs,
+    /// mirrored here so the popover re-renders the instant "Got it" lands.
+    private let onboardingDefaults = UserDefaults.standard
+    private static let startedAtKey = "onboardingStartedAt"
+    private static let pitchDismissedAtKey = "onboardingPitchDismissedAt"
+    @Published private(set) var pitchDismissed = false
     /// Anti-cheese (docs/PRODUCT.md §1): manual credits (clicking the buddy)
     /// are rate-limited to one per 10 minutes. In-memory on purpose — this
     /// guards against accidental double-earning, not adversaries.
@@ -70,9 +79,36 @@ final class CollectionManager: ObservableObject {
             persist()
             telemetry.log(TelemetryEvent(name: "first_roll_granted"))
         }
+
+        let started = onboardingDefaults.object(forKey: Self.startedAtKey) != nil
+        var dismissed = onboardingDefaults.object(forKey: Self.pitchDismissedAtKey) != nil
+
+        // Grandfathering (docs/BACKLOG.md §3d): a save that already owns a
+        // buddy or has earned scoots, yet carries neither funnel marker,
+        // predates the FTUE — pre-dismiss its pitch silently so it never
+        // replays onboarding for a buddy it already has. The distinction that
+        // matters: a *fresh* user who quit mid-funnel has `startedAt` set, so
+        // this branch skips them and the derived stage resumes them at .pitch.
+        if !started && !dismissed && (!state.owned.isEmpty || state.totalScoots > 0) {
+            onboardingDefaults.set(Date(), forKey: Self.pitchDismissedAtKey)
+            dismissed = true
+        }
+        pitchDismissed = dismissed
+
+        // First arrival at the "?" front door on a genuinely fresh install:
+        // stamp the start marker and open the funnel. `started` makes this
+        // once-only — a fresh user who quit at "?" resumes without re-logging.
+        if !started && !dismissed && state.owned.isEmpty {
+            onboardingDefaults.set(Date(), forKey: Self.startedAtKey)
+            telemetry.log(TelemetryEvent(name: "onboarding_started"))
+        }
     }
 
     // MARK: - Derived
+
+    var onboardingStage: OnboardingStage {
+        OnboardingStage.stage(for: state, pitchDismissed: pitchDismissed)
+    }
 
     var activeSpecies: Buddy? {
         state.activeBuddy.flatMap { catalog.species(withID: $0.speciesID) }
@@ -149,6 +185,15 @@ final class CollectionManager: ObservableObject {
         persist()
         telemetry.log(TelemetryEvent(name: "buddy_named",
                                      properties: ["species": state.owned[index].speciesID]))
+    }
+
+    /// The pitch card's "Got it": completes the funnel (stage → .done), which
+    /// releases the held scheduler and un-hides the rest of the app. Write-once.
+    func dismissPitch() {
+        guard !pitchDismissed else { return }
+        onboardingDefaults.set(Date(), forKey: Self.pitchDismissedAtKey)
+        pitchDismissed = true
+        telemetry.log(TelemetryEvent(name: "onboarding_completed"))
     }
 
     func setActive(index: Int) {

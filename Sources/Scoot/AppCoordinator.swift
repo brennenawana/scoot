@@ -26,6 +26,10 @@ final class AppCoordinator {
     private var movementWatcher: MovementWatcher?
     private var nudgeWindowID = 0
     private var creditedThisWindow = false
+    // The scheduler starts exactly once, deferred if a feature holds nudges
+    // through onboarding; releasing the hold at runtime starts it then, which
+    // is when scheduler_started (the verification signal) fires (§3d).
+    private var schedulerStarted = false
 
     init() {
         let settings = self.settings
@@ -66,7 +70,10 @@ final class AppCoordinator {
 
         let statusController = StatusItemController(
             makePopoverContent: { [weak self] in self?.makePopoverContent() ?? NSViewController() },
-            extraMenuItems: features.flatMap { $0.quickMenuItems() },
+            // Re-evaluated each time the menu opens: onboarding gates the dex
+            // out and, via baseItemsHidden, everything but Quit (§3d).
+            extraMenuItems: { [weak self] in self?.features.flatMap { $0.quickMenuItems() } ?? [] },
+            baseItemsHidden: { [weak self] in self?.onboardingHolding ?? false },
             onNudgeNow: { [weak self] in self?.scheduler.requestNudgeNow() },
             onPause: { [weak self] in self?.scheduler.pause(for: 3600) },
             onResume: { [weak self] in self?.scheduler.resume() },
@@ -102,12 +109,12 @@ final class AppCoordinator {
         }
 
         for feature in features {
-            feature.onNeedsRefresh = { [weak self] in self?.applyFeatureIcons() }
+            feature.onNeedsRefresh = { [weak self] in self?.handleFeatureRefresh() }
             feature.start()
         }
         applyFeatureIcons()
 
-        scheduler.start()
+        startSchedulerIfReady()
         telemetry.log(TelemetryEvent(name: "app_started"))
     }
 
@@ -162,6 +169,30 @@ final class AppCoordinator {
 
     // MARK: - Feature seams
 
+    /// True while any feature holds nudges — the single gate for onboarding's
+    /// hidden surfaces (scheduler, quick-menu chrome, popover chrome). Nothing
+    /// registered → never holding → v0.1 behavior (§3d, the unplug test).
+    private var onboardingHolding: Bool {
+        features.contains { $0.holdsNudges() }
+    }
+
+    private func startSchedulerIfReady() {
+        guard !schedulerStarted, !onboardingHolding else { return }
+        schedulerStarted = true
+        scheduler.start()
+    }
+
+    private func handleFeatureRefresh() {
+        applyFeatureIcons()
+        startSchedulerIfReady()
+        // Payoff beat: the icon just became the named buddy — punctuate it
+        // with the burst (§3d). Map (not first-match) so every feature's
+        // one-shot flag is consumed.
+        if features.map({ $0.consumeStatusCelebration() }).contains(true) {
+            statusController?.animator.playBurst(duration: 1.2)
+        }
+    }
+
     private func makePopoverContent() -> NSViewController {
         NSHostingController(rootView: PopoverView(
             scheduler: scheduler,
@@ -169,6 +200,7 @@ final class AppCoordinator {
             portraitOverride: features.lazy.compactMap { $0.popoverPortrait() }.first,
             accessory: features.lazy.compactMap { $0.popoverAccessory() }.first,
             footerAccessory: features.lazy.compactMap { $0.popoverFooterAccessory() }.first,
+            chromeHidden: onboardingHolding,
             onNudgeNow: { [weak self] in self?.scheduler.requestNudgeNow() },
             onPause: { [weak self] in self?.scheduler.pause(for: 3600) },
             onResume: { [weak self] in self?.scheduler.resume() },

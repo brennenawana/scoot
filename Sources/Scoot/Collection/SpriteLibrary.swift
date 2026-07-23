@@ -26,6 +26,18 @@ enum SpriteLibrary {
         sheet(named: species.spriteSheet)
     }
 
+    /// The pre-roll "?" performer (docs/BACKLOG.md §3d) — not a species, so it
+    /// gets its own entry point rather than a faked Buddy.
+    static var mysterySheet: SpriteSheet? {
+        sheet(named: "mystery")
+    }
+
+    /// The "?" menu-bar icon set (frame 0 template silhouette, 1-4 the bounce),
+    /// same five-frame atlas contract as a species'.
+    static func mysteryStatusIcons() -> StatusIconSet? {
+        menuBarAtlasIcons(named: "mystery-menubar")
+    }
+
     /// The credited-scoot hop. Nil for species without one (callers fall back
     /// to the dance sheet at a livelier fps).
     static func celebrateSheet(for species: Buddy) -> SpriteSheet? {
@@ -93,7 +105,10 @@ enum SpriteLibrary {
     /// Slices buddy-<id>-menubar(@2x).png — horizontal strips of five 18px
     /// frames — into NSImages carrying both Retina reps.
     private static func menuBarAtlasIcons(for species: Buddy) -> StatusIconSet? {
-        let name = "\(species.spriteSheet)-menubar"
+        menuBarAtlasIcons(named: "\(species.spriteSheet)-menubar")
+    }
+
+    private static func menuBarAtlasIcons(named name: String) -> StatusIconSet? {
         var cgByScale: [Int: CGImage] = [:]
         for (scale, suffix) in [(1, ""), (2, "@2x")] {
             guard let url = Bundle.module.url(forResource: "\(name)\(suffix)",
