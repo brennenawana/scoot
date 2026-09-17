@@ -1,0 +1,49 @@
+[package]
+name = "scoot-windows"
+version = "0.1.0"
+edition = "2021"
+description = "Scoot's Windows shell — a tray citizen that feeds signals to scoot-core and renders its decisions (docs/PORTS.md §7)"
+license = "MIT"
+
+[[bin]]
+name = "scoot"
+path = "src/main.rs"
+
+# Dependency budget (PORTS.md §6/§12 — each justified, nothing else):
+#   scoot-core  the judgment; no decision is made outside it
+#   windows     the Win32 surface PORTS.md §7 names (tray, layered window,
+#               idle, session/power notifications, QUNS, registry, PlaySound)
+#   serde/_json settings.json + events.jsonl (CONTRACTS.md §8.5/§8.6)
+#   png         sprite strips and tray icons decode at the shell
+# No async runtime, no chrono, no UI framework, no Electron (PORTS.md §9).
+[dependencies]
+scoot-core = { path = "../../core-rs" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+png = "0.18"
+
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.62"
+features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Dwm",
+  "Win32_Graphics_Gdi",
+  "Win32_Media_Audio",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Power",
+  "Win32_System_Registry",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_SystemInformation",
+  "Win32_System_SystemServices",
+  "Win32_System_Threading",
+  "Win32_UI_Controls",
+  "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+]

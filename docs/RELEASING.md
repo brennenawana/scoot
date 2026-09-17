@@ -44,6 +44,43 @@ this class of bug.
 
 Upload the DMG to the GitHub Release; the site links the latest.
 
+## Cutting a Windows release (M2 onward)
+
+```powershell
+scripts\make-windows-dist.ps1        # cargo build --release + stage + zip
+```
+
+Produces `dist/Scoot-<version>-win-x64/` and the matching `.zip` containing
+`Scoot.exe`, `install.ps1`, `README.txt` and `LICENSE`. Attach the zip to the
+same GitHub Release as the macOS DMG — PORTS.md §3's one-version-line rule
+means per-OS artifacts share a release, even while their feature levels differ.
+
+**Version stamp.** `make-app.sh` takes the newest git tag because on macOS the
+tag and the shipped feature set are the same thing. On Windows they are not
+yet: the repo is tagged `v0.2.0` for the macOS collection release while the
+Windows shell is at v0.1 *parity* with no collection (PORTS.md §7). So the
+Windows script defaults to the crate version and prints a note when it differs
+from the tag. Pass `-Version` to force the shared line once the two converge
+at M4. **This is a real tension, not an oversight — worth a decision before
+the first public Windows release.**
+
+**Install story.** No MSI, no WiX: an installer framework is a dependency well
+outside the §6 budget for something a copy can do. `install.ps1` puts Scoot in
+`%LOCALAPPDATA%\Programs\Scoot`, adds a Start Menu entry, and repoints an
+existing login entry at the installed copy. Per-user, no elevation, nothing
+outside the profile. `-Uninstall` reverses all three and deliberately leaves
+`%APPDATA%\Scoot` alone, because settings and the local event log are the
+user's.
+
+Keep both scripts **ASCII-only**. Windows PowerShell 5.1 reads a BOM-less
+script as ANSI, and a single em dash in a comment is enough to break the parse
+for anyone who runs it with the PowerShell their machine came with.
+
+**Not signed.** PORTS.md lists code signing as an M2 non-goal, and §13 records
+the consequence: SmartScreen warns on first run, exactly as Gatekeeper does for
+an un-notarized Mac build. An Authenticode certificate is a later, separate
+decision — the mirror of the Apple Developer Program item in BACKLOG §2.
+
 ## Sparkle (arrives v0.2) — the part everyone gets wrong
 
 Sparkle 2 ships nested executable code that **must be signed inside-out,

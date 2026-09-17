@@ -1,5 +1,8 @@
-# Rust workspace for the ports (docs/PORTS.md): the portable core now,
-# platform shells later. The Swift package (Package.swift) is unaffected.
+# Rust workspace for the ports (docs/PORTS.md): the portable core and the
+# platform shells. The Swift package (Package.swift) is unaffected.
+#
+# shells/windows builds to an empty stub off Windows (see its main.rs), so
+# `cargo test --workspace` stays green on every CI target.
 [workspace]
-members = ["core-rs"]
+members = ["core-rs", "shells/windows"]
 resolver = "2"
